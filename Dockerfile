@@ -62,9 +62,13 @@ RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
 
 USER root
 RUN apt-get install -y nodejs-legacy
-USER build
+RUN wget https://deb.nodesource.com/setup_8.x
+RUN chmod +x setup_8.x
+RUN ./setup_8.x
+RUN apt-get install -y nodejs
 
-#RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
+USER build
+RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
 
 USER root
