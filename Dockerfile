@@ -41,6 +41,17 @@ RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pk
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libsoup-2.4.pc
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/sdk-linux-mips64.tar.bz2
 
+COPY src/Makefile.linux.mk /home/build/frida
+RUN make build/.frida-gum-submodule-stamp
+
+USER root
+RUN apt-get install -y npm
+USER build
+
+RUN make build/.frida-gum-npm-stamp
+#RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
+#RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
+
 
 USER root
 
