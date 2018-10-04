@@ -42,13 +42,22 @@ RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pk
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/sdk-linux-mips64.tar.bz2
 
 COPY src/Makefile.linux.mk /home/build/frida
-RUN make build/.frida-gum-submodule-stamp
+RUN make FRIDA_HOST=linux-mips64 build/.frida-gum-submodule-stamp
 
 USER root
 RUN apt-get install -y npm
 USER build
 
-RUN make build/.frida-gum-npm-stamp
+RUN git config --global user.email "you@example.com"
+RUN git config --global user.name "Your Name"
+RUN git stash save
+RUN git checkout master
+RUN git checkout 12.2.8
+RUN git stash pop
+
+RUN make build/frida-env-linux-x86_64.rc
+
+RUN make FRIDA_HOST=linux-mips64 NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stamp
 #RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
 #RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
