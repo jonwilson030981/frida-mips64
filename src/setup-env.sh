@@ -225,7 +225,7 @@ case $host_platform in
         meson_host_cpu="mips1"
         ;;
       mips64)
-        host_arch_flags="-march=mips64r2"
+        host_arch_flags="-march=mips64r2 -mabi=64"
         host_toolprefix="mips64-unknown-linux-gnu-"
 
         meson_host_cpu="mips64r2"
@@ -250,8 +250,8 @@ case $host_platform in
     OBJCOPY="${host_toolprefix}objcopy"
     OBJDUMP="${host_toolprefix}objdump"
 
-    CFLAGS="$host_arch_flags -ffunction-sections -fdata-sections"
-    LDFLAGS="$host_arch_flags -Wl,--gc-sections -Wl,-z,noexecstack"
+    CFLAGS="-I/home/build/zlib-1.2.11/ $host_arch_flags -ffunction-sections -fdata-sections"
+    LDFLAGS="-L/home/build/zlib-1.2.11/ $host_arch_flags -Wl,--gc-sections -Wl,-z,noexecstack"
 
     arch_args=$(flags_to_args "$host_arch_flags")
 
