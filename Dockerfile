@@ -58,7 +58,12 @@ RUN git stash pop
 RUN make build/frida-env-linux-x86_64.rc
 
 RUN make FRIDA_HOST=linux-mips64 NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stamp
-#RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
+RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
+
+USER root
+RUN apt-get install -y nodejs-legacy
+USER build
+
 #RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
 
