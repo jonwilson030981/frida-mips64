@@ -1,7 +1,15 @@
 .PHONY: all run
-
+PWD = $(shell pwd)
+UID = $(shell id -u)
+GID = $(shell id -g)
+COMMANDS := " \
+	cp  /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/; \
+	chown $(UID):$(GID) /mnt/gum-tests; \
+	"
 all:
 	docker build -t frida-mips64 .
+	mkdir -p bin
+	docker run --rm --name frida-mips64 -v $(PWD)/bin/:/mnt frida-mips64 /bin/bash -c $(COMMANDS)
 
 run: all
 	docker run --rm -ti --name frida-mips64 frida-mips64 /bin/bash
