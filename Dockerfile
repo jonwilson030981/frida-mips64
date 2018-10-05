@@ -61,5 +61,32 @@ RUN make FRIDA_HOST=linux-mips64 NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stam
 RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
 RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
+RUN cp releng/devkit-assets/frida-gum-example-unix.c test.c
+RUN sed -i "s/frida-gum.h/gum.h/g" test.c
+RUN mips64-unknown-linux-gnu-gcc -o test test.c \
+	-Wno-pointer-to-int-cast \
+	-I ./build/frida-linux-mips64/include/frida-1.0/gum/ \
+	-I ./build/frida-linux-mips64/include/frida-1.0/ \
+	-I ./build/fs-linux-mips64/include/glib-2.0 \
+	-I ./build/fs-linux-mips64/lib/glib-2.0/include/ \
+	-I ./build/frida-linux-mips64/include/ \
+	-ldl \
+	-l rt \
+	-l resolv \
+	-l m \
+	-lpthread \
+	./build/frida-linux-mips64/lib/libfrida-gum-1.0.a \
+	./build/sdk-linux-mips64/lib/libgobject-2.0.a \
+	./build/sdk-linux-mips64/lib/libelf.a \
+	./build/sdk-linux-mips64/lib/liblzma.a \
+	./build/sdk-linux-mips64/lib/libz.a  \
+	./build/sdk-linux-mips64/lib/libffi.a \
+	./build/frida-linux-mips64/lib/libcapstone.a \
+	./build/sdk-linux-mips64/lib/libgio-2.0.a \
+	./build/fs-linux-mips64/lib/libgmodule-2.0.a \
+	./build/sdk-linux-mips64/lib/gio/modules/libgioopenssl-static.a \
+	./build/sdk-linux-mips64/lib/libglib-2.0.a \
+	./build/sdk-linux-mips64/lib/libgobject-2.0.a 
+
 USER root
 

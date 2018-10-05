@@ -8,6 +8,9 @@ COMMANDS := " \
 	mips64-unknown-linux-gnu-strip /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests; \
 	cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/gum-tests-stripped; \
 	chown $(UID):$(GID) /mnt/gum-tests-stripped; \
+	cp /home/build/frida/test /mnt/test; \
+	mips64-unknown-linux-gnu-strip /mnt/test; \
+	chown $(UID):$(GID) /mnt/test; \
 	"
 all:
 	docker build -t frida-mips64 .
