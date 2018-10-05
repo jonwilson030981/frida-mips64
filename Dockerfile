@@ -21,16 +21,19 @@ RUN apt-get install -y python python3 language-pack-en-base
 # CLONE FRIDA
 USER build
 WORKDIR /home/build/
-RUN git clone https://github.com/frida/frida.git -b 12.2.8
+RUN git clone https://github.com/frida/frida.git
 WORKDIR /home/build/frida
+RUN git checkout -b 12.2.8
+
+# Patch the build scripts for mips64
 COPY src/config.site.in /home/build/frida/releng/
 COPY src/setup-env.sh /home/build/frida/releng/
 COPY src/Makefile.sdk.mk /home/build/frida/
 
+# Build the SDK
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/liblzma.pc
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/sqlite3.pc
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libunwind.pc
-#RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/libiconv.a
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/libelf.a
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/libdwarf.a
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libffi.pc
@@ -41,35 +44,22 @@ RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pk
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libsoup-2.4.pc
 RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/sdk-linux-mips64.tar.bz2
 
-COPY src/Makefile.linux.mk /home/build/frida
-RUN make FRIDA_HOST=linux-mips64 build/.frida-gum-submodule-stamp
-
+# Install pre-requisites for gum
 USER root
-RUN apt-get install -y npm
-USER build
-
-RUN git config --global user.email "you@example.com"
-RUN git config --global user.name "Your Name"
-RUN git stash save
-RUN git checkout master
-RUN git checkout 12.2.8
-RUN git stash pop
-
-RUN make build/frida-env-linux-x86_64.rc
-
-RUN make FRIDA_HOST=linux-mips64 NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stamp
-RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
-
-USER root
-RUN apt-get install -y nodejs-legacy
+RUN apt-get install -y nodejs-legacy npm
 RUN wget https://deb.nodesource.com/setup_8.x
 RUN chmod +x setup_8.x
 RUN ./setup_8.x
 RUN apt-get install -y nodejs
-
 USER build
-RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
+# Build frida-gum
+RUN make build/frida-env-linux-x86_64.rc
+COPY src/Makefile.linux.mk /home/build/frida
+RUN make FRIDA_HOST=linux-mips64 build/.frida-gum-submodule-stamp
+RUN make FRIDA_HOST=linux-mips64 NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stamp
+RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
+RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
 USER root
 
