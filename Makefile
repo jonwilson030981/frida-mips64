@@ -5,6 +5,9 @@ GID = $(shell id -g)
 COMMANDS := " \
 	cp  /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/; \
 	chown $(UID):$(GID) /mnt/gum-tests; \
+	mips64-unknown-linux-gnu-strip /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests; \
+	cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/gum-tests-stripped; \
+	chown $(UID):$(GID) /mnt/gum-tests-stripped; \
 	"
 all:
 	docker build -t frida-mips64 .
