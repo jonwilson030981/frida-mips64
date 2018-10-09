@@ -22,7 +22,6 @@ all:
 	docker run --rm --name frida-mips64 -v $(PWD)/bin/:/mnt frida-mips64 /bin/bash -c $(COMMANDS)
 
 run: all
-	xhost + $(IP)
 	docker run --rm -ti --name frida-mips64 frida-mips64 /bin/bash
 
 debug: all
