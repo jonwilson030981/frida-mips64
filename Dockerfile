@@ -107,3 +107,7 @@ RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
 RUN echo "remote put /home/build/debug/gum-tests /root/gum-tests"  >> ~/.gdbinit
 RUN echo "set remote exec-file /root/gum-tests"  >> ~/.gdbinit
 
+# Patch for elf-module addresses
+COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
+RUN make -C /home/build/frida/ build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
+RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /home/build/debug/
