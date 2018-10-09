@@ -90,24 +90,63 @@ RUN mips64-unknown-linux-gnu-gcc -o test test.c \
 
 USER root
 RUN apt-get install -y gdb vim cmake python3-pip gdb-multiarch
-RUN wget -q -O- https://github.com/hugsy/gef/raw/master/scripts/gef.sh | sh
+RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
 RUN pip3 install --upgrade pip
 RUN pip3 install unicorn keystone-engine keystone-engine ropper
 RUN ln -s /usr/local/lib/python3.5/dist-packages/usr/lib/python3/dist-packages/keystone/libkeystone.so /usr/local/lib/python3.5/dist-packages/keystone/libkeystone.so 
 ENV LC_CTYPE C.UTF-8
 
 USER build
-RUN mkdir -p /home/build/debug/
-WORKDIR /home/build/debug/
-RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /home/build/debug/
-RUN cp /home/build/frida/test /home/build/debug/
-
-USER root
-RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
-RUN echo "remote put /home/build/debug/gum-tests /root/gum-tests"  >> ~/.gdbinit
-RUN echo "set remote exec-file /root/gum-tests"  >> ~/.gdbinit
 
 # Patch for elf-module addresses
 COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
 RUN make -C /home/build/frida/ build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
-RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /home/build/debug/
+RUN mips64-unknown-linux-gnu-gcc -o test test.c \
+	-Wno-pointer-to-int-cast \
+	-I ./build/frida-linux-mips64/include/frida-1.0/gum/ \
+	-I ./build/frida-linux-mips64/include/frida-1.0/ \
+	-I ./build/fs-linux-mips64/include/glib-2.0 \
+	-I ./build/fs-linux-mips64/lib/glib-2.0/include/ \
+	-I ./build/frida-linux-mips64/include/ \
+	-ldl \
+	-l rt \
+	-l resolv \
+	-l m \
+	-lpthread \
+	./build/frida-linux-mips64/lib/libfrida-gum-1.0.a \
+	./build/sdk-linux-mips64/lib/libgobject-2.0.a \
+	./build/sdk-linux-mips64/lib/libelf.a \
+	./build/sdk-linux-mips64/lib/liblzma.a \
+	./build/sdk-linux-mips64/lib/libz.a  \
+	./build/sdk-linux-mips64/lib/libffi.a \
+	./build/frida-linux-mips64/lib/libcapstone.a \
+	./build/sdk-linux-mips64/lib/libgio-2.0.a \
+	./build/fs-linux-mips64/lib/libgmodule-2.0.a \
+	./build/sdk-linux-mips64/lib/gio/modules/libgioopenssl-static.a \
+	./build/sdk-linux-mips64/lib/libglib-2.0.a \
+	./build/sdk-linux-mips64/lib/libgobject-2.0.a 
+
+USER root
+RUN apt-get install -y gdb vim cmake python3-pip gdb-multiarch
+RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
+RUN pip3 install --upgrade pip
+RUN pip3 install unicorn keystone-engine keystone-engine ropper
+
+USER root
+ENV SYSROOT /home/build/x-tools/mips64-unknown-linux-gnu/mips64-unknown-linux-gnu/sysroot
+RUN mkdir -p $SYSROOT/root/
+RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests $SYSROOT/root/
+RUN cp /home/build/frida/test $SYSROOT/root/
+RUN mkdir -p $SYSROOT/root/data/
+RUN cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips.so $SYSROOT/root/data
+RUN cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips.so $SYSROOT/root/data
+
+RUN echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
+RUN echo "set sysroot $SYSROOT" >> ~/.gdbinit
+RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/test /root/test"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/data/targetfunctions-linux-mips.so /root/data/targetfunctions-linux-mips.so"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/data/specialfunctions-linux-mips.so /root/data/specialfunctions-linux-mips.so"  >> ~/.gdbinit
+
+RUN echo "set remote exec-file /root/gum-tests"  >> ~/.gdbinit
