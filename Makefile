@@ -2,6 +2,7 @@
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
+PORT = 3000
 COMMANDS := " \
 	cp  /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/; \
 	chown $(UID):$(GID) /mnt/gum-tests; \
@@ -20,7 +21,7 @@ all:
 	docker run --rm --name frida-mips64 -v $(PWD)/bin/:/mnt frida-mips64 /bin/bash -c $(COMMANDS)
 
 run: all
-	docker run --rm -ti --name frida-mips64 frida-mips64 /bin/bash
+	docker run --rm -ti --name frida-mips64 -p $(PORT):$(PORT) --network=host frida-mips64 /bin/bash
 
 push: all
 	docker image tag frida-mips64 repo.treescale.com/jonwilson/private/frida-mips64

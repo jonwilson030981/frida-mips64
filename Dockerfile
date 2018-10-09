@@ -89,4 +89,22 @@ RUN mips64-unknown-linux-gnu-gcc -o test test.c \
 	./build/sdk-linux-mips64/lib/libgobject-2.0.a 
 
 USER root
+RUN apt-get install -y gdb vim cmake python-pip gdb-multiarch
+RUN wget -q -O- https://github.com/hugsy/gef/raw/master/scripts/gef.sh | sh
+RUN pip install --upgrade pip
+RUN pip install unicorn keystone-engine keystone-engine ropper
+RUN ln -s /usr/local/lib/python2.7/dist-packages/usr/lib/python2.7/dist-packages/keystone/libkeystone.so /usr/local/lib/python2.7/dist-packages/keystone/libkeystone.so 
+ENV LC_CTYPE C.UTF-8
 
+USER build
+RUN mkdir -p /home/build/debug/
+WORKDIR /home/build/debug/
+RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /home/build/debug/
+RUN cp /home/build/frida/test /home/build/debug/
+
+RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
+RUN echo "set sysroot /home/build/debug/:/root/" >> ~/.gdbinit
+RUN echo "remote put /home/build/debug/gum-tests /root/gum-tests"  >> ~/.gdbinit
+RUN echo "set remote exec-file /root/gum-tests"  >> ~/.gdbinit
+
+USER root
