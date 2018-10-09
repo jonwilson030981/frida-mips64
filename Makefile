@@ -22,7 +22,7 @@ all:
 	docker run --rm --name frida-mips64 -v $(PWD)/bin/:/mnt frida-mips64 /bin/bash -c $(COMMANDS)
 
 run: all
-	docker run --rm -ti --name frida-mips64 frida-mips64 /bin/bash
+	docker run --rm -ti --name frida-mips64 --network=host frida-mips64 /bin/bash
 
 debug: all
 	docker run --rm -ti --name frida-mips64 -p $(PORT):$(PORT) --network=host frida-mips64 gdb-multiarch
