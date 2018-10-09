@@ -15,12 +15,14 @@ COMMANDS := " \
 	mips64-unknown-linux-gnu-strip /mnt/test-stripped; \
 	chown $(UID):$(GID) /mnt/test-stripped; \
 	"
+
 all:
 	docker build -t frida-mips64 .
 	mkdir -p bin
 	docker run --rm --name frida-mips64 -v $(PWD)/bin/:/mnt frida-mips64 /bin/bash -c $(COMMANDS)
 
 run: all
+	xhost + $(IP)
 	docker run --rm -ti --name frida-mips64 frida-mips64 /bin/bash
 
 debug: all
