@@ -722,7 +722,11 @@ gum_mips_writer_put_addi_reg_reg_imm (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, dst_reg, &rt);
   gum_mips_writer_describe_reg (self, left_reg, &rs);
 
-  gum_mips_writer_put_instruction (self, 0x20000000 | (rs.index << 21) |
+  g_assert(imm & 0xffff = imm);
+  /*
+   * For MIPS64 we want to carry out a 64bit doubleword operation.
+   */
+  gum_mips_writer_put_instruction (self, 0x64000000 | (rs.index << 21) |
       (rt.index << 16) | (imm & 0xffff));
 }
 

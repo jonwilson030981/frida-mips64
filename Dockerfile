@@ -102,6 +102,14 @@ RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
 RUN pip3 install --upgrade pip
 RUN pip3 install unicorn keystone-engine keystone-engine ropper
 
+ENV SYSROOT /home/build/x-tools/mips64-unknown-linux-gnu/mips64-unknown-linux-gnu/sysroot
+RUN echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
+RUN echo "set sysroot $SYSROOT" >> ~/.gdbinit
+RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
+#RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/test /root/test"  >> ~/.gdbinit
+RUN echo "set remote exec-file /root/test"  >> ~/.gdbinit
+
 USER build
 # Patch for elf-module addresses
 COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
@@ -137,15 +145,8 @@ RUN mips64-unknown-linux-gnu-gcc -o test test.c \
 	./build/sdk-linux-mips64/lib/libgobject-2.0.a
 
 USER root
-ENV SYSROOT /home/build/x-tools/mips64-unknown-linux-gnu/mips64-unknown-linux-gnu/sysroot
 RUN mkdir -p $SYSROOT/root/
 RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests $SYSROOT/root/
 RUN cp /home/build/frida/test $SYSROOT/root/
-RUN mkdir -p $SYSROOT/root/data/
 
-RUN echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
-RUN echo "set sysroot $SYSROOT" >> ~/.gdbinit
-RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/test /root/test"  >> ~/.gdbinit
-RUN echo "set remote exec-file /root/test"  >> ~/.gdbinit
+
