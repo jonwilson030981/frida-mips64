@@ -100,6 +100,7 @@ USER build
 
 # Patch for elf-module addresses
 COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
+COPY src/gummipsrelocator.c /home/build/frida/frida-gum/gum/arch-mips/gummipsrelocator.c
 RUN make -C /home/build/frida/ build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
 USER root

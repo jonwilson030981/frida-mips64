@@ -3,25 +3,34 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-typedef struct _ExampleListener ExampleListener;
-typedef enum _ExampleHookId ExampleHookId;
-
-struct _ExampleListener
+typedef struct _ExampleListener
 {
   GObject parent;
 
   guint num_calls;
-};
+} ExampleListener;
 
-enum _ExampleHookId
+typedef enum _ExampleHookId
 {
   EXAMPLE_HOOK_OPEN,
   EXAMPLE_HOOK_CLOSE
-};
+} ExampleHookId;
 
-static void example_listener_iface_init (gpointer g_iface, gpointer iface_data);
+int my_open(const char *path, int oflag)
+{
+  static int fd = STDERR_FILENO;
+  return ++fd;
+}
 
-#define EXAMPLE_TYPE_LISTENER (example_listener_get_type ())
+int my_close(int fd)
+{
+  return 0;
+}
+
+static void
+example_listener_iface_init (gpointer g_iface,
+                             gpointer iface_data);
+
 G_DECLARE_FINAL_TYPE (ExampleListener, example_listener, EXAMPLE, LISTENER, GObject)
 G_DEFINE_TYPE_EXTENDED (ExampleListener,
                         example_listener,
@@ -29,73 +38,6 @@ G_DEFINE_TYPE_EXTENDED (ExampleListener,
                         0,
                         G_IMPLEMENT_INTERFACE (GUM_TYPE_INVOCATION_LISTENER,
                             example_listener_iface_init))
-
-typedef struct _GumFunctionContext GumFunctionContext;
-
-int
-main (int argc,
-      char * argv[])
-{
-  GumInterceptor * interceptor;
-  GumInvocationListener * listener;
-
-  g_print ("main\n");
-
-  gum_init_embedded ();
-  g_print ("gum_init_embedded\n");
-
-
-  interceptor = gum_interceptor_obtain ();
-  g_print ("interceptor: %p\n", interceptor);
-
-  listener = g_object_new (EXAMPLE_TYPE_LISTENER, NULL);
-  g_print ("listener: %p\n", listener);
-
-  (void)gum_interceptor_begin_transaction (interceptor);
-  g_print ("gum_interceptor_begin_transaction\n");
-
-  GumAddress open_addr = gum_module_find_export_by_name (NULL, "open");
-  g_print ("gum_module_find_export_by_name(open): %p\n", open_addr);
-
-  GumAttachReturn open_attach = gum_interceptor_attach_listener (interceptor,
-      GSIZE_TO_POINTER (open_addr),
-      listener,
-      GSIZE_TO_POINTER (EXAMPLE_HOOK_OPEN));
-  g_print ("gum_interceptor_attach_listener(open): %d\n", open_attach);
-
-  GumAddress close_addr = gum_module_find_export_by_name (NULL, "close");
-  g_print ("gum_module_find_export_by_name(close): %p\n", close_addr);
-
-  GumAttachReturn close_attach = gum_interceptor_attach_listener (interceptor,
-      GSIZE_TO_POINTER (close_addr),
-      listener,
-      GSIZE_TO_POINTER (EXAMPLE_HOOK_CLOSE));
-
-  g_print ("gum_interceptor_attach_listener(close): %d\n", close_attach);
-
-  (void)gum_interceptor_end_transaction (interceptor);
-
-  close (open ("/etc/hosts", O_RDONLY));
-  close (open ("/etc/fstab", O_RDONLY));
-
-  g_print ("[*] listener got %u calls\n", EXAMPLE_LISTENER (listener)->num_calls);
-
-  (void) (interceptor, listener);
-
-  close (open ("/etc/hosts", O_RDONLY));
-  close (open ("/etc/fstab", O_RDONLY));
-
-  g_print ("[*] listener still has %u calls\n", EXAMPLE_LISTENER (listener)->num_calls);
-
-  g_object_unref (listener);
-  g_object_unref (interceptor);
-
-  gum_deinit_embedded ();
-
-  g_print ("done\n");
-
-  return 0;
-}
 
 static void
 example_listener_on_enter (GumInvocationListener * listener,
@@ -144,3 +86,71 @@ static void
 example_listener_init (ExampleListener * self)
 {
 }
+
+
+
+int
+main (int argc,
+      char * argv[])
+{
+  GumInterceptor * interceptor;
+  GumInvocationListener * listener;
+
+  g_print ("main\n");
+
+  gum_init_embedded ();
+  g_print ("gum_init_embedded\n");
+
+
+  interceptor = gum_interceptor_obtain ();
+  g_print ("interceptor: %p\n", interceptor);
+
+  listener = g_object_new (example_listener_get_type(), NULL);
+  g_print ("listener: %p\n", listener);
+
+  (void)gum_interceptor_begin_transaction (interceptor);
+  g_print ("gum_interceptor_begin_transaction\n");
+
+  GumAddress open_addr = gum_module_find_export_by_name (NULL, "my_open");
+  g_print ("gum_module_find_export_by_name(my_open): %p\n", open_addr);
+
+  GumAttachReturn open_attach = gum_interceptor_attach_listener (interceptor,
+      GSIZE_TO_POINTER (open_addr),
+      listener,
+      GSIZE_TO_POINTER (EXAMPLE_HOOK_OPEN));
+  g_print ("gum_interceptor_attach_listener(my_open): %d\n", open_attach);
+
+  GumAddress close_addr = gum_module_find_export_by_name (NULL, "my_close");
+  g_print ("gum_module_find_export_by_name(my_close): %p\n", close_addr);
+
+  GumAttachReturn close_attach = gum_interceptor_attach_listener (interceptor,
+      GSIZE_TO_POINTER (close_addr),
+      listener,
+      GSIZE_TO_POINTER (EXAMPLE_HOOK_CLOSE));
+
+  g_print ("gum_interceptor_attach_listener(my_close): %d\n", close_attach);
+
+  gum_interceptor_end_transaction (interceptor);
+
+  my_close (my_open ("/etc/hosts", O_RDONLY));
+  my_close (my_open ("/etc/fstab", O_RDONLY));
+
+  g_print ("[*] listener got %u calls\n", EXAMPLE_LISTENER (listener)->num_calls);
+
+  gum_interceptor_detach_listener(interceptor, listener);
+
+  my_close (my_open ("/etc/hosts", O_RDONLY));
+  my_close (my_open ("/etc/fstab", O_RDONLY));
+
+  g_print ("[*] listener still has %u calls\n", EXAMPLE_LISTENER (listener)->num_calls);
+
+  g_object_unref (listener);
+  g_object_unref (interceptor);
+
+  gum_deinit_embedded ();
+
+  g_print ("done\n");
+
+  return 0;
+}
+
