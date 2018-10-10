@@ -532,15 +532,16 @@ gum_mips_writer_put_ret (GumMipsWriter * self)
 }
 
 void
-gum_mips_write_put_ldrt9_reg( GumMipsWriter * self,
-                            mips_reg reg,
-                            gushort offset)
+gum_mips_write_put_ld_reg( GumMipsWriter * self,
+                              mips_reg base_reg,
+                              mips_reg dest_reg,
+                              gushort offset)
 {
     GumMipsRegInfo base;
-    gum_mips_writer_describe_reg (self, MIPS_REG_T9, &base);
+    gum_mips_writer_describe_reg (self, base_reg, &base);
 
     GumMipsRegInfo rt;
-    gum_mips_writer_describe_reg (self, reg, &rt);
+    gum_mips_writer_describe_reg (self, dest_reg, &rt);
 
     gum_mips_writer_put_instruction (self, 0x68000000 | (base.index << 21) |
       (rt.index << 16) | offset);
@@ -558,15 +559,46 @@ gum_mips_writer_put_j_address2 (GumMipsWriter * self,
 }
 
 void
+gum_mips_writer_put_dsll_reg_reg (GumMipsWriter * self,
+                                mips_reg rt_reg,
+                                mips_reg rd_reg,
+                                guint sa)
+{
+    GumMipsRegInfo rt;
+    gum_mips_writer_describe_reg (self, rt_reg, &rt);
+
+    GumMipsRegInfo rd;
+    gum_mips_writer_describe_reg (self, rd_reg, &rd);
+
+    g_assert(sa & 0x1f == sa);
+
+    gum_mips_writer_put_instruction (self, (rt.index << 16) | (rd.index << 11) | (sa << 6) | 0x38);
+}
+
+void
 gum_mips_writer_put_la_reg_address (GumMipsWriter * self,
                                     mips_reg reg,
                                     GumAddress address)
 {
-  g_print("gum_mips_writer_put_la_reg_address - pc: %p, addr: %p\n", self->pc, address);
+  g_print("gum_mips_writer_put_la_reg_address - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
+  gum_mips_writer_put_lui_reg_imm(self, reg, (address >> 48));
+  gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, (address >> 32) & 0xffff);
+  gum_mips_writer_put_dsll_reg_reg(self, reg, reg, 16);
+  gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, (address >> 16) & 0xffff);
+  gum_mips_writer_put_dsll_reg_reg(self, reg, reg, 16);
+  gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, address & 0xffff);
+}
+
+void
+gum_mips_writer_put_prologue_trampoline (GumMipsWriter * self,
+                                         mips_reg reg,
+                                         GumAddress address)
+{
+  g_print("gum_mips_writer_put_prologue_trampoline - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
   if(self->pc % 8 == 0)
   {
     gum_mips_writer_put_j_address2(self, self->pc + 0x10);
-    gum_mips_write_put_ldrt9_reg(self, reg, 0x8);
+    gum_mips_write_put_ld_reg(self, MIPS_REG_T9, reg, 0x8);
     g_assert(self->pc % 8 == 0);
     gum_mips_writer_put_instruction(self, address >> 32);
     gum_mips_writer_put_instruction(self, address & 0xffffffff);
@@ -574,12 +606,13 @@ gum_mips_writer_put_la_reg_address (GumMipsWriter * self,
   else
   {
     gum_mips_writer_put_j_address2(self, self->pc + 0x14);
-    gum_mips_write_put_ldrt9_reg(self, reg, 0xc);
+    gum_mips_write_put_ld_reg(self, MIPS_REG_T9, reg, 0xc);
     gum_mips_writer_put_instruction(self, 0x20);
     g_assert(self->pc % 8 == 0);
     gum_mips_writer_put_instruction(self, address >> 32);
     gum_mips_writer_put_instruction(self, address & 0xffffffff);
   }
+  gum_mips_writer_put_jr_reg (self, reg);
 }
 
 void

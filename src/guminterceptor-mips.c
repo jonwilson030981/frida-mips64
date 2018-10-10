@@ -91,12 +91,12 @@ gum_interceptor_backend_prepare_trampoline (GumInterceptorBackend * self,
 
   *need_deflector = FALSE;
 
-  if (gum_mips_relocator_can_relocate (function_address, 32,
+  if (gum_mips_relocator_can_relocate (function_address, 28,
       GUM_SCENARIO_ONLINE, &redirect_limit, &data->scratch_reg))
   {
     g_print("can reloc redirect_limit: %d\n", redirect_limit);
 
-    data->redirect_code_size = 32;
+    data->redirect_code_size = 28;
 
     ctx->trampoline_slice = gum_code_allocator_alloc_slice (self->allocator);
     g_print("trampoline_slice: %p\n", ctx->trampoline_slice);
@@ -230,6 +230,11 @@ _gum_interceptor_backend_destroy_trampoline (GumInterceptorBackend * self,
 }
 
 void
+gum_mips_writer_put_prologue_trampoline (GumMipsWriter * self,
+                                         mips_reg reg,
+                                         GumAddress address);
+
+void
 _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
                                               GumFunctionContext * ctx,
                                               gpointer prologue)
@@ -255,9 +260,8 @@ _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
       case 8:
         gum_mips_writer_put_j_address (cw, on_enter);
         break;
-      case 32:
-        gum_mips_writer_put_la_reg_address (cw, MIPS_REG_AT, on_enter);
-        gum_mips_writer_put_jr_reg (cw, MIPS_REG_AT);
+      case 28:
+        gum_mips_writer_put_prologue_trampoline (cw, MIPS_REG_AT, on_enter);
         break;
       default:
         g_assert_not_reached ();
@@ -296,12 +300,16 @@ gum_interceptor_backend_create_thunks (GumInterceptorBackend * self)
   GumMipsWriter * cw = &self->writer;
 
   self->enter_thunk = gum_code_allocator_alloc_slice (self->allocator);
+  g_print("enter_thunk: %p\n", self->enter_thunk);
+  g_print("enter_thunk->data: %p\n", self->enter_thunk->data);
   gum_mips_writer_reset (cw, self->enter_thunk->data);
   gum_emit_enter_thunk (cw);
   gum_mips_writer_flush (cw);
   g_assert_cmpuint (gum_mips_writer_offset (cw), <=, self->enter_thunk->size);
 
   self->leave_thunk = gum_code_allocator_alloc_slice (self->allocator);
+  g_print("leave_thunk: %p\n", self->leave_thunk);
+  g_print("leave_thunk->data: %p\n", self->leave_thunk->data);
   gum_mips_writer_reset (cw, self->leave_thunk->data);
   gum_emit_leave_thunk (cw);
   gum_mips_writer_flush (cw);
