@@ -99,6 +99,7 @@ gum_interceptor_backend_prepare_trampoline (GumInterceptorBackend * self,
     data->redirect_code_size = 32;
 
     ctx->trampoline_slice = gum_code_allocator_alloc_slice (self->allocator);
+    g_print("trampoline_slice: %p\n", ctx->trampoline_slice);
   }
   else
   {
@@ -233,6 +234,7 @@ _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
                                               GumFunctionContext * ctx,
                                               gpointer prologue)
 {
+  g_print("_gum_interceptor_backend_activate_trampoline\n");
   GumMipsWriter * cw = &self->writer;
   GumMipsFunctionContextData * data = (GumMipsFunctionContextData *)
       &ctx->backend_data;
@@ -253,7 +255,7 @@ _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
       case 8:
         gum_mips_writer_put_j_address (cw, on_enter);
         break;
-      case 36:
+      case 32:
         gum_mips_writer_put_la_reg_address (cw, MIPS_REG_AT, on_enter);
         gum_mips_writer_put_jr_reg (cw, MIPS_REG_AT);
         break;
