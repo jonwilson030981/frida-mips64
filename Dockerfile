@@ -96,18 +96,19 @@ RUN pip3 install unicorn keystone-engine keystone-engine ropper
 RUN ln -s /usr/local/lib/python3.5/dist-packages/usr/lib/python3/dist-packages/keystone/libkeystone.so /usr/local/lib/python3.5/dist-packages/keystone/libkeystone.so
 ENV LC_CTYPE C.UTF-8
 
-USER build
-
-# Patch for elf-module addresses
-COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
-COPY src/gummipsrelocator.c /home/build/frida/frida-gum/gum/arch-mips/gummipsrelocator.c
-RUN make -C /home/build/frida/ build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
-
 USER root
 RUN apt-get install -y gdb vim cmake python3-pip gdb-multiarch
 RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
 RUN pip3 install --upgrade pip
 RUN pip3 install unicorn keystone-engine keystone-engine ropper
+
+USER build
+# Patch for elf-module addresses
+COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
+COPY src/gummipsrelocator.c /home/build/frida/frida-gum/gum/arch-mips/gummipsrelocator.c
+COPY src/gummipswriter.c /home/build/frida/frida-gum/gum/arch-mips/gummipswriter.c
+COPY src/guminterceptor-mips.c /home/build/frida/frida-gum/gum/backend-mips/guminterceptor-mips.c
+RUN make -C /home/build/frida/ build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 
 COPY src/test.c /home/build/frida/
 RUN mips64-unknown-linux-gnu-gcc -o test test.c \

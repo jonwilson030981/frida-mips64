@@ -398,10 +398,10 @@ gum_mips_relocator_can_relocate (gpointer address,
     gboolean eoi;
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_LITTLE_ENDIAN,
+    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_LITTLE_ENDIAN,
         &capstone);
 #else
-    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_BIG_ENDIAN,
+    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN,
         &capstone);
 #endif
     g_assert_cmpint (err, == , CS_ERR_OK);
