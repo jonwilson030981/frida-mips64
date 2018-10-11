@@ -94,16 +94,16 @@ gum_interceptor_backend_prepare_trampoline (GumInterceptorBackend * self,
   if (gum_mips_relocator_can_relocate (function_address, 28,
       GUM_SCENARIO_ONLINE, &redirect_limit, &data->scratch_reg))
   {
-    g_print("can reloc redirect_limit: %d\n", redirect_limit);
+    //g_print("can reloc redirect_limit: %d\n", redirect_limit);
 
     data->redirect_code_size = 28;
 
     ctx->trampoline_slice = gum_code_allocator_alloc_slice (self->allocator);
-    g_print("trampoline_slice: %p\n", ctx->trampoline_slice);
+    //g_print("trampoline_slice: %p\n", ctx->trampoline_slice);
   }
   else
   {
-    g_print("can't reloc redirect_limit: %d\n", redirect_limit);
+    //g_print("can't reloc redirect_limit: %d\n", redirect_limit);
     GumAddressSpec spec;
     gsize alignment;
 
@@ -240,7 +240,7 @@ _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
                                               GumFunctionContext * ctx,
                                               gpointer prologue)
 {
-  g_print("_gum_interceptor_backend_activate_trampoline\n");
+  //g_print("_gum_interceptor_backend_activate_trampoline\n");
   GumMipsWriter * cw = &self->writer;
   GumMipsFunctionContextData * data = (GumMipsFunctionContextData *)
       &ctx->backend_data;

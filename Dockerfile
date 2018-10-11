@@ -157,16 +157,6 @@ RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests $SYSRO
 RUN cp /home/build/frida/test $SYSROOT/root/
 RUN cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so $SYSROOT/root/
 RUN cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips64.so $SYSROOT/root/
-RUN echo "\
-	./gum-tests \
-	-s /Core/X86Writer/call_indirect_label \
-	-s /Core/X86Writer/lock_inc_dec_imm32_ptr \
-	-s /Core/ArmWriter/ldr_u32 \
-	-s /Core/ArmWriter/ldr_pc_u32 \
-	-s /Core/ArmWriter/ldr_pc_u32 \
-	-s /Core/ThumbWriter/ldr_u32 \
-	-s /Core/Arm64Writer/ldr_x_address \
-	-s /Core/Arm64Writer/ldr_d_address \
-	" >> $SYSROOT/root/run.sh
+COPY src/run.sh $SYSROOT/root/run.sh
 
 
