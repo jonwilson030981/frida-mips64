@@ -106,7 +106,7 @@ ENV SYSROOT /home/build/x-tools/mips64-unknown-linux-gnu/mips64-unknown-linux-gn
 RUN echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
 RUN echo "set sysroot $SYSROOT" >> ~/.gdbinit
 RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
-#RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
 RUN echo "remote put $SYSROOT/root/test /root/test"  >> ~/.gdbinit
 RUN echo "set remote exec-file /root/test"  >> ~/.gdbinit
 
@@ -118,7 +118,8 @@ COPY src/gummipsrelocator.c /home/build/frida/frida-gum/gum/arch-mips/gummipsrel
 COPY src/gummipswriter.c /home/build/frida/frida-gum/gum/arch-mips/gummipswriter.c
 COPY src/guminterceptor-mips.c /home/build/frida/frida-gum/gum/backend-mips/guminterceptor-mips.c
 COPY src/gumcpucontext-mips.c /home/build/frida/frida-gum/gum/backend-mips/gumcpucontext-mips.c
-RUN make -C /home/build/frida/ build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
+RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
+RUN . ./build/fs-meson-env-linux-mips64.rc && cd ./frida-gum/tests/core/ && ./build-targetfunctions.sh linux mips64
 
 COPY src/test.c /home/build/frida/
 RUN mips64-unknown-linux-gnu-gcc -o test test.c \

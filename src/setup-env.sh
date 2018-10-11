@@ -53,7 +53,7 @@ case $host_arch in
     ;;
   mips64)
     meson_host_cpu_family=mips
-    meson_host_cpu=mips64
+    meson_host_cpu=mips
     meson_host_endian=big
     ;;
   mipsel)
