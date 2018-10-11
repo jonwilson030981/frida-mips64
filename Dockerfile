@@ -103,15 +103,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install unicorn keystone-engine keystone-engine ropper
 
 ENV SYSROOT /home/build/x-tools/mips64-unknown-linux-gnu/mips64-unknown-linux-gnu/sysroot
-RUN echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
-RUN echo "set sysroot $SYSROOT" >> ~/.gdbinit
-RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/run.sh /root/run.sh"  >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/targetfunctions-linux-mips64.so /root/targetfunctions-linux-mips64.so"  >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/specialfunctions-linux-mips64.so /root/specialfunctions-linux-mips64.so"  >> ~/.gdbinit
-RUN echo "remote put $SYSROOT/root/test /root/test"  >> ~/.gdbinit
-RUN echo "set remote exec-file /root/test"  >> ~/.gdbinit
+COPY src/.gdbinit /root/.gdbinit
 
 USER build
 # Patch for elf-module addresses
