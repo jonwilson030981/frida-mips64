@@ -367,7 +367,7 @@ gum_mips_writer_put_argument_list_setup (GumMipsWriter * self,
     const GumArgument * arg = &args[arg_index];
     mips_reg r = MIPS_REG_A0 + arg_index;
 
-    if (arg_index < 4)
+    if (arg_index < 8)
     {
       if (arg->type == GUM_ARG_ADDRESS)
       {
@@ -425,10 +425,10 @@ static void
 gum_mips_writer_put_argument_list_teardown (GumMipsWriter * self,
                                             guint n_args)
 {
-  if (n_args > 4)
+  if (n_args > 8)
   {
     gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP,
-        (n_args - 4) * sizeof (guint32));
+        (n_args - 8) * sizeof (guint64));
   }
 }
 
@@ -752,7 +752,7 @@ gum_mips_writer_put_push_reg (GumMipsWriter * self,
                               mips_reg reg)
 {
   gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP,
-      -((gint32) sizeof (guint32)));
+      -((guint64) sizeof (guint64)));
   gum_mips_writer_put_sw_reg_reg_offset (self, reg, MIPS_REG_SP, 0);
 }
 
@@ -761,7 +761,7 @@ gum_mips_writer_put_pop_reg (GumMipsWriter * self,
                              mips_reg reg)
 {
   gum_mips_writer_put_lw_reg_reg_offset (self, reg, MIPS_REG_SP, 0);
-  gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP, sizeof (guint32));
+  gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP, sizeof (guint64));
 }
 
 void
@@ -851,19 +851,19 @@ gum_mips_writer_describe_reg (GumMipsWriter * self,
   if (reg >= MIPS_REG_0 && reg <= MIPS_REG_31)
   {
     ri->meta = GUM_MREG_R0 + (reg - MIPS_REG_0);
-    ri->width = 32;
+    ri->width = 64;
     ri->index = ri->meta - GUM_MREG_R0;
   }
   else if (reg == MIPS_REG_HI)
   {
     ri->meta = GUM_MREG_HI;
-    ri->width = 32;
+    ri->width = 64;
     ri->index = -1;
   }
   else if (reg == MIPS_REG_LO)
   {
     ri->meta = GUM_MREG_LO;
-    ri->width = 32;
+    ri->width = 64;
     ri->index = -1;
   }
   else

@@ -229,6 +229,7 @@ _gum_interceptor_backend_destroy_trampoline (GumInterceptorBackend * self,
   ctx->trampoline_deflector = NULL;
 }
 
+extern
 void
 gum_mips_writer_put_prologue_trampoline (GumMipsWriter * self,
                                          mips_reg reg,
@@ -421,7 +422,7 @@ gum_emit_prolog (GumMipsWriter * cw)
 
   /* SP */
   gum_mips_writer_put_addi_reg_reg_imm (cw, MIPS_REG_V0, MIPS_REG_SP,
-      4 + (30 * 4));
+      4 + (30 * 8));
   gum_mips_writer_put_push_reg (cw, MIPS_REG_V0);
 
   gum_mips_writer_put_push_reg (cw, MIPS_REG_GP);
