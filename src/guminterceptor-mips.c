@@ -150,7 +150,7 @@ _gum_interceptor_backend_create_trampoline (GumInterceptorBackend * self,
   if (!gum_interceptor_backend_prepare_trampoline (self, ctx, &need_deflector))
     return FALSE;
 
-  g_print("making trampoline\n");
+  //g_print("making trampoline\n");
   gum_mips_writer_reset (cw, ctx->trampoline_slice->data);
 
   ctx->on_enter_trampoline = gum_mips_writer_cur (cw);
@@ -181,9 +181,9 @@ _gum_interceptor_backend_create_trampoline (GumInterceptorBackend * self,
 
   ctx->on_invoke_trampoline = gum_mips_writer_cur (cw);
 
-  g_print("trampoline - ctx->on_enter_trampoline: %p\n", ctx->on_enter_trampoline);
-  g_print("trampoline - ctx->on_leave_trampoline: %p\n", ctx->on_leave_trampoline);
-  g_print("trampoline - ctx->on_invoke_trampoline: %p\n", ctx->on_invoke_trampoline);
+  //g_print("trampoline - ctx->on_enter_trampoline: %p\n", ctx->on_enter_trampoline);
+  //g_print("trampoline - ctx->on_leave_trampoline: %p\n", ctx->on_leave_trampoline);
+  //g_print("trampoline - ctx->on_invoke_trampoline: %p\n", ctx->on_invoke_trampoline);
 
   /* Fix t9 to point to the original function address */
   gum_mips_writer_put_la_reg_address (cw, MIPS_REG_T9,
@@ -301,16 +301,16 @@ gum_interceptor_backend_create_thunks (GumInterceptorBackend * self)
   GumMipsWriter * cw = &self->writer;
 
   self->enter_thunk = gum_code_allocator_alloc_slice (self->allocator);
-  g_print("enter_thunk: %p\n", self->enter_thunk);
-  g_print("enter_thunk->data: %p\n", self->enter_thunk->data);
+  //g_print("enter_thunk: %p\n", self->enter_thunk);
+  //g_print("enter_thunk->data: %p\n", self->enter_thunk->data);
   gum_mips_writer_reset (cw, self->enter_thunk->data);
   gum_emit_enter_thunk (cw);
   gum_mips_writer_flush (cw);
   g_assert_cmpuint (gum_mips_writer_offset (cw), <=, self->enter_thunk->size);
 
   self->leave_thunk = gum_code_allocator_alloc_slice (self->allocator);
-  g_print("leave_thunk: %p\n", self->leave_thunk);
-  g_print("leave_thunk->data: %p\n", self->leave_thunk->data);
+  //g_print("leave_thunk: %p\n", self->leave_thunk);
+  //g_print("leave_thunk->data: %p\n", self->leave_thunk->data);
   gum_mips_writer_reset (cw, self->leave_thunk->data);
   gum_emit_leave_thunk (cw);
   gum_mips_writer_flush (cw);

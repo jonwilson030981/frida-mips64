@@ -580,7 +580,7 @@ gum_mips_writer_put_la_reg_address (GumMipsWriter * self,
                                     mips_reg reg,
                                     GumAddress address)
 {
-  g_print("gum_mips_writer_put_la_reg_address - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
+  //g_print("gum_mips_writer_put_la_reg_address - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
   gum_mips_writer_put_lui_reg_imm(self, reg, (address >> 48));
   gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, (address >> 32) & 0xffff);
   gum_mips_writer_put_dsll_reg_reg(self, reg, reg, 16);
@@ -594,7 +594,7 @@ gum_mips_writer_put_prologue_trampoline (GumMipsWriter * self,
                                          mips_reg reg,
                                          GumAddress address)
 {
-  g_print("gum_mips_writer_put_prologue_trampoline - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
+  //g_print("gum_mips_writer_put_prologue_trampoline - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
   if(self->pc % 8 == 0)
   {
     gum_mips_writer_put_j_address2(self, self->pc + 0x10);
