@@ -107,6 +107,9 @@ RUN echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
 RUN echo "set sysroot $SYSROOT" >> ~/.gdbinit
 RUN echo "target extended-remote localhost:3000" >> ~/.gdbinit
 RUN echo "remote put $SYSROOT/root/gum-tests /root/gum-tests"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/run.sh /root/run.sh"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/targetfunctions-linux-mips64.so /root/targetfunctions-linux-mips64.so"  >> ~/.gdbinit
+RUN echo "remote put $SYSROOT/root/specialfunctions-linux-mips64.so /root/specialfunctions-linux-mips64.so"  >> ~/.gdbinit
 RUN echo "remote put $SYSROOT/root/test /root/test"  >> ~/.gdbinit
 RUN echo "set remote exec-file /root/test"  >> ~/.gdbinit
 
@@ -151,5 +154,18 @@ USER root
 RUN mkdir -p $SYSROOT/root/
 RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests $SYSROOT/root/
 RUN cp /home/build/frida/test $SYSROOT/root/
+RUN cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so $SYSROOT/root/
+RUN cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips64.so $SYSROOT/root/
+RUN echo "\
+	./gum-tests \
+	-s /Core/X86Writer/call_indirect_label \
+	-s /Core/X86Writer/lock_inc_dec_imm32_ptr \
+	-s /Core/ArmWriter/ldr_u32 \
+	-s /Core/ArmWriter/ldr_pc_u32 \
+	-s /Core/ArmWriter/ldr_pc_u32 \
+	-s /Core/ThumbWriter/ldr_u32 \
+	-s /Core/Arm64Writer/ldr_x_address \
+	-s /Core/Arm64Writer/ldr_d_address \
+	" >> $SYSROOT/root/run.sh
 
 
