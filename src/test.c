@@ -232,10 +232,17 @@ main (int argc,
 
   g_print ("[*] listener still has %u calls\n", EXAMPLE_LISTENER (listener)->num_calls);
 
+  g_print ("[*] tidying up\n");
+
   g_object_unref (listener);
+  g_print ("[*] deleted listener\n");
+
   g_object_unref (interceptor);
+  g_print ("[*] deleted interceptor\n");
 
   gum_deinit_embedded ();
+  g_object_unref ("[*] unintialized\n");
+
 
   g_print ("done\n");
 
