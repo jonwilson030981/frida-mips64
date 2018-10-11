@@ -10,6 +10,7 @@ gpointer
 gum_cpu_context_get_nth_argument (GumCpuContext * self,
                                   guint n)
 {
+  g_print("gum_cpu_context_get_nth_argument: %p\n", self);
   if (n < 8)
   {
     switch (n)
@@ -36,7 +37,7 @@ gum_cpu_context_get_nth_argument (GumCpuContext * self,
   {
     gpointer * stack_argument = (gpointer *) (self->sp + 0x48);
 
-    return stack_argument[n - 4];
+    return stack_argument[n - 8];
   }
 
   return NULL;
@@ -81,7 +82,7 @@ gum_cpu_context_replace_nth_argument (GumCpuContext * self,
   {
     gpointer * stack_argument = (gpointer *) (self->sp + 0x48);
 
-    stack_argument[n - 4] = value;
+    stack_argument[n - 8] = value;
   }
 }
 

@@ -668,7 +668,11 @@ gum_mips_writer_put_lw_reg_reg_offset (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, dst_reg, &rt);
   gum_mips_writer_describe_reg (self, base_reg, &rb);
 
-  gum_mips_writer_put_instruction (self, 0x8c000000 | (rb.index << 21) |
+
+  /*
+   * Perform a 64-bit store
+   */
+  gum_mips_writer_put_instruction (self, 0xdc000000 | (rb.index << 21) |
       (rt.index << 16) | (src_offset & 0xffff));
 }
 
@@ -683,7 +687,10 @@ gum_mips_writer_put_sw_reg_reg_offset (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, src_reg, &rt);
   gum_mips_writer_describe_reg (self, base_reg, &rb);
 
-  gum_mips_writer_put_instruction (self, 0xac000000 | (rb.index << 21) |
+  /*
+   * Perform a 64-bit store
+   */
+  gum_mips_writer_put_instruction (self, 0xfc000000 | (rb.index << 21) |
       (rt.index << 16) | (dest_offset & 0xffff));
 }
 
