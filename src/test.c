@@ -141,7 +141,7 @@ main (int argc,
   GumInterceptor * interceptor;
   GumInvocationListener * listener;
 
-  g_print ("main\n");
+  printf ("main\n");
 
   gum_init_embedded ();
   g_print ("gum_init_embedded\n");
@@ -241,10 +241,10 @@ main (int argc,
   g_print ("[*] deleted interceptor\n");
 
   gum_deinit_embedded ();
-  g_object_unref ("[*] unintialized\n");
+  printf ("[*] unintialized\n");
 
 
-  g_print ("done\n");
+  printf ("done\n");
 
   return 0;
 }
