@@ -115,7 +115,7 @@ COPY src/gumcpucontext-mips.c /home/build/frida/frida-gum/gum/backend-mips/gumcp
 COPY src/interceptor-fixture.c /home/build/frida/frida-gum/tests/core/interceptor-fixture.c
 COPY src/gumdefs.h /home/build/frida/frida-gum/gum/gumdefs.h
 
-RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
+RUN make -B build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
 RUN . ./build/fs-meson-env-linux-mips64.rc && cd ./frida-gum/tests/core/ && ./build-targetfunctions.sh linux mips64
 
 COPY src/test.c /home/build/frida/
