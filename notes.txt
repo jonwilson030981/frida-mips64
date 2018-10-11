@@ -1,0 +1,43 @@
+   on invoke trampoline:
+   //fix t9 to point to original function
+   0xfff7c10870:    lui t9,0x0
+   0xfff7c10874:    ori t9,t9,0xff
+   0xfff7c10878:    dsll    t9,t9,0x10
+   0xfff7c1087c:    ori t9,t9,0xf7e8
+   0xfff7c10880:    dsll    t9,t9,0x10
+   0xfff7c10884:    ori t9,t9,0x10d0
+
+   // first 0x28 bytes of pthread_key_create
+   0xfff7c10888:    lui t1,0x2
+   0xfff7c1088c:    daddu   t1,t1,t9
+   0xfff7c10890:    daddiu  t1,t1,12128
+   0xfff7c10894:    ld  a7,-32488(t1)
+   0xfff7c10898:    move    a2,zero
+   0xfff7c1089c:    move    a3,a7
+   0xfff7c108a0:    b   0xfff7c108b8
+   // This branch lands below?!? If included in pthread_key_create, then it should be fixed up to point there
+
+   // Set at = pthread_key_create + 28 & jump at it
+   0xfff7c108a4:    lui at,0x0
+   0xfff7c108a8:    ori at,at,0xff
+   0xfff7c108ac:    dsll    at,at,0x10
+   0xfff7c108b0:    ori at,at,0xf7e8
+   0xfff7c108b4:    dsll    at,at,0x10
+   0xfff7c108b8:    ori at,at,0x10ec
+   0xfff7c108bc:    jr  at
+
+
+gef➤  x/20i pthread_key_create
+   0xfff7e810d0 <pthread_key_create>:  lui   t1,0x2
+   0xfff7e810d4 <pthread_key_create+4>:   daddu t1,t1,t9
+   0xfff7e810d8 <pthread_key_create+8>:   daddiu   t1,t1,12128
+   0xfff7e810dc <pthread_key_create+12>:  ld a7,-32488(t1)
+   0xfff7e810e0 <pthread_key_create+16>:  move  a2,zero
+   0xfff7e810e4 <pthread_key_create+20>:  move  a3,a7
+   0xfff7e810e8 <pthread_key_create+24>:  b  0xfff7e81100 <pthread_key_create+48>
+   0xfff7e810ec <pthread_key_create+28>:  li a5,1024
+   0xfff7e810f0 <pthread_key_create+32>:  daddiu   a2,a2,1
+   0xfff7e810f4 <pthread_key_create+36>:  nop
+   0xfff7e810f8 <pthread_key_create+40>:  beq   a2,a5,0xfff7e81160 <pthread_key_create+144>
+   0xfff7e810fc <pthread_key_create+44>:  daddiu   a3,a3,16
+   0xfff7e81100 <pthread_key_create+48>:  ld v0,0(a3)
