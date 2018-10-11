@@ -25,7 +25,7 @@ run: all
 	docker run --rm -ti --name frida-mips64 --network=host frida-mips64 /bin/bash
 
 debug: all
-	docker run --rm -ti --name frida-mips64 -p $(PORT):$(PORT) --network=host frida-mips64 gdb-multiarch
+	docker run --rm -ti --name frida-mips64 --network=host frida-mips64 gdb-multiarch
 
 push: all
 	docker image tag frida-mips64 repo.treescale.com/jonwilson/private/frida-mips64
@@ -35,7 +35,7 @@ push: all
 clean: rm rmi
 
 rmi:
-	docker image ls | grep none | cut -c 41-52 | xargs -r docker rmi --force
+	docker image ls | grep none | cut -c 68-79 | xargs docker rmi --force
 
 rm:
-	docker ps -a | grep -v CONTAINER | cut -d " " -f 1 | xargs -r docker rm --force
+	docker ps -a | grep -v CONTAINER | cut -d " " -f 1 | xargs docker rm --force
