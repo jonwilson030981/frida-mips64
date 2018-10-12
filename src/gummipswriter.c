@@ -714,7 +714,10 @@ gum_mips_writer_put_addu_reg_reg_reg (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, left_reg, &rs);
   gum_mips_writer_describe_reg (self, right_reg, &rt);
 
-  gum_mips_writer_put_instruction (self, 0x00000021 | (rs.index << 21) |
+  /*
+   * Perform a 64-bit move
+   */
+  gum_mips_writer_put_instruction (self, 0x000000A5 | (rs.index << 21) |
       (rt.index << 16) | (rd.index << 11));
 }
 
