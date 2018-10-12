@@ -6,7 +6,6 @@
     -s /Core/ThumbWriter/ldr_u32 \
     -s /Core/Arm64Writer/ldr_x_address \
     -s /Core/Arm64Writer/ldr_d_address \
-    -s /Core/Interceptor/attach_to_pthread_key_create \
     -s /GumJS/Script/function_can_be_replaced#DUK \
     -s /GumJS/Script/interceptor_handles_invalid_arguments#DUK \
     -s /GumJS/Script/memory_can_be_copied#DUK \

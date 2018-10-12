@@ -436,8 +436,8 @@ gboolean
 gum_mips_writer_can_branch_directly_between (GumAddress from,
                                              GumAddress to)
 {
-  gint64 lower_limit = (from & 0xf0000000);
-  gint64 upper_limit = (from & 0xf0000000) + GUM_INT28_MASK;
+  gint64 lower_limit = (from & 0xfffffffff0000000);
+  gint64 upper_limit = (from & 0xfffffffff0000000) + GUM_INT28_MASK;
 
   return lower_limit < to && to < upper_limit;
 }
@@ -446,7 +446,7 @@ gboolean
 gum_mips_writer_put_j_address (GumMipsWriter * self,
                                GumAddress address)
 {
-  if ((address & 0xf0000000) != (self->pc & 0xf0000000) || address % 4 != 0)
+  if ((address & 0xfffffffff0000000) != (self->pc & 0xfffffffff0000000) || address % 4 != 0)
     return FALSE;
 
   gum_mips_writer_put_instruction (self,
