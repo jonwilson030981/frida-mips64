@@ -152,4 +152,5 @@ RUN cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so $S
 RUN cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips64.so $SYSROOT/root/
 COPY src/run.sh $SYSROOT/root/run.sh
 
-
+RUN cp $SYSROOT/root/test $SYSROOT/root/test-stripped
+RUN mips64-unknown-linux-gnu-strip $SYSROOT/root/test-stripped

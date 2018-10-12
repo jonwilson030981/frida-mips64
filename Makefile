@@ -6,13 +6,9 @@ PORT = 3000
 COMMANDS := " \
 	cp  /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/; \
 	chown $(UID):$(GID) /mnt/gum-tests; \
-	mips64-unknown-linux-gnu-strip /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests; \
-	cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/gum-tests-stripped; \
-	chown $(UID):$(GID) /mnt/gum-tests-stripped; \
 	cp /home/build/frida/test /mnt/test; \
 	chown $(UID):$(GID) /mnt/test; \
 	cp /home/build/frida/test /mnt/test-stripped; \
-	mips64-unknown-linux-gnu-strip /mnt/test-stripped; \
 	chown $(UID):$(GID) /mnt/test-stripped; \
 	cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so /mnt/targetfunctions-linux-mips64.so; \
 	chown $(UID):$(GID) /mnt/targetfunctions-linux-mips64.so; \
