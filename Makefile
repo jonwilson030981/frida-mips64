@@ -14,6 +14,10 @@ COMMANDS := " \
 	cp /home/build/frida/test /mnt/test-stripped; \
 	mips64-unknown-linux-gnu-strip /mnt/test-stripped; \
 	chown $(UID):$(GID) /mnt/test-stripped; \
+	cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so /mnt/targetfunctions-linux-mips64.so; \
+	chown $(UID):$(GID) /mnt/targetfunctions-linux-mips64.so; \
+	cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips64.so /mnt/specialfunctions-linux-mips64.so; \
+	chown $(UID):$(GID) /mnt/specialfunctions-linux-mips64.so; \
 	"
 
 all:
