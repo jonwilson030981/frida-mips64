@@ -64,7 +64,7 @@
 # if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #  define GUM_TEST_SHLIB_ARCH "mipsel"
 # else
-#  define GUM_TEST_SHLIB_ARCH "mips64"
+#  define GUM_TEST_SHLIB_ARCH "mips"
 # endif
 #else
 # error Unknown CPU

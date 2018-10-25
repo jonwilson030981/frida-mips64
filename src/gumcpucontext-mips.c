@@ -10,7 +10,7 @@ gpointer
 gum_cpu_context_get_nth_argument (GumCpuContext * self,
                                   guint n)
 {
-  if (n < 8)
+  if (n < 4)
   {
     switch (n)
     {
@@ -22,21 +22,13 @@ gum_cpu_context_get_nth_argument (GumCpuContext * self,
         return (gpointer) self->a2;
       case 3:
         return (gpointer) self->a3;
-      case 4:
-        return (gpointer) self->t0;
-      case 5:
-        return (gpointer) self->t1;
-      case 6:
-        return (gpointer) self->t2;
-      case 7:
-        return (gpointer) self->t3;
     }
   }
   else
   {
-    gpointer * stack_argument = (gpointer *) (self->sp + 0x8);
+    gpointer * stack_argument = (gpointer *) (self->sp + 0x14);
 
-    return stack_argument[n - 8];
+    return stack_argument[n - 4];
   }
 
   return NULL;
@@ -47,41 +39,29 @@ gum_cpu_context_replace_nth_argument (GumCpuContext * self,
                                       guint n,
                                       gpointer value)
 {
-  if (n < 8)
+  if (n < 4)
   {
     switch (n)
     {
       case 0:
-        self->a0 = (guint64) value;
+        self->a0 = (guint32) value;
         break;
       case 1:
-        self->a1 = (guint64) value;
+        self->a1 = (guint32) value;
         break;
       case 2:
-        self->a2 = (guint64) value;
+        self->a2 = (guint32) value;
         break;
       case 3:
-        self->a3 = (guint64) value;
-        break;
-      case 4:
-        self->t0 = (guint64) value;
-        break;
-      case 5:
-        self->t1 = (guint64) value;
-        break;
-      case 6:
-        self->t2 = (guint64) value;
-        break;
-      case 7:
-        self->t3 = (guint64) value;
+        self->a3 = (guint32) value;
         break;
     }
   }
   else
   {
-    gpointer * stack_argument = (gpointer *) (self->sp + 0x8);
+    gpointer * stack_argument = (gpointer *) (self->sp + 0x14);
 
-    stack_argument[n - 8] = value;
+    stack_argument[n - 4] = value;
   }
 }
 
@@ -95,5 +75,5 @@ void
 gum_cpu_context_replace_return_value (GumCpuContext * self,
                                       gpointer value)
 {
-  self->v0 = (guint64) value;
+  self->v0 = (guint32) value;
 }

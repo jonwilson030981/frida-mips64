@@ -67,10 +67,10 @@ gum_mips_relocator_init (GumMipsRelocator * relocator,
   relocator->ref_count = 1;
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_LITTLE_ENDIAN,
+  err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_LITTLE_ENDIAN,
       &relocator->capstone);
 #else
-  err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN,
+  err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_BIG_ENDIAN,
       &relocator->capstone);
 #endif
   g_assert_cmpint (err, ==, CS_ERR_OK);
@@ -200,7 +200,6 @@ gum_mips_relocator_read_one (GumMipsRelocator * self,
       self->eoi = FALSE;
       self->delay_slot_pending = TRUE;
       break;
-    case MIPS_INS_B:
     case MIPS_INS_BEQ:
     case MIPS_INS_BEQL:
     case MIPS_INS_BGEZ:
@@ -294,50 +293,11 @@ gum_mips_relocator_write_one (GumMipsRelocator * self)
   }
 
   switch (insn->id)
-  {         
-    case MIPS_INS_B:
-      {
-        cs_mips_op * op;
-        gssize target, offset;
-        //g_print("op_count: %d\n", ctx.detail->op_count);
-
-        op = &ctx.detail->operands[ctx.detail->op_count - 1];
-
-        g_assert_cmpint (op->type, ==, MIPS_OP_IMM);
-        target = (gssize) op->imm;        
-        offset = self->output->pc - target;
-        //g_print("BRANCH: address: 0x%016lx, imm: 0x%016lx, target: 0x%016lx, offset: 0x%016lx, pc: 0x%016lx\n", insn->address, op->imm, target, offset, self->output->pc);
-
-        g_assert((target & 0x3) == 0);
-        g_assert((target & 0xfffffffff0000000) == (self->output->pc & 0xfffffffff0000000));
-
-        gum_mips_writer_put_instruction (ctx.output, 0x08000000 | ((target & GUM_INT28_MASK) / 4));
-        gum_mips_writer_put_bytes (ctx.output, delay_slot_insn->bytes, delay_slot_insn->size);
-        break;
-      }
-    case MIPS_INS_J:
-    case MIPS_INS_BEQ:
-    case MIPS_INS_BEQL:
-    case MIPS_INS_BGEZ:
-    case MIPS_INS_BGEZL:
-    case MIPS_INS_BGTZ:
-    case MIPS_INS_BGTZL:
-    case MIPS_INS_BLEZ:
-    case MIPS_INS_BLEZL:
-    case MIPS_INS_BLTZ:
-    case MIPS_INS_BLTZL:
-    case MIPS_INS_BNE:
-    case MIPS_INS_BNEL:
-      /*
-       * No implementation for these yet. There is no conditional jump instruction for MIPS and the range of branch instructions is +-128K. This makes things a bit tricky.
-       */
-      g_assert_not_reached();
-      break;
+  {
     default:
-      //g_print("DEFAULT: address: 0x%016lx, pc: 0x%016lx, id: %d = %s\t%s\n", insn->address, self->output->pc, insn->id, insn->mnemonic, insn->op_str);
       rewritten = FALSE;
       break;
-  };
+  }
 
   if (!rewritten)
   {
@@ -438,10 +398,10 @@ gum_mips_relocator_can_relocate (gpointer address,
     gboolean eoi;
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_LITTLE_ENDIAN,
+    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_LITTLE_ENDIAN,
         &capstone);
 #else
-    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN,
+    err = cs_open (CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_BIG_ENDIAN,
         &capstone);
 #endif
     g_assert_cmpint (err, == , CS_ERR_OK);
@@ -467,7 +427,7 @@ gum_mips_relocator_can_relocate (gpointer address,
 
           g_assert_cmpint (op->type, ==, MIPS_OP_IMM);
           target =
-              (gssize) (GPOINTER_TO_SIZE (insn[i].address & 0xfffffffff0000000)) |
+              (gssize) (GPOINTER_TO_SIZE (insn[i].address & 0xf0000000)) |
               (op->imm << 2);
           offset = target - (gssize) GPOINTER_TO_SIZE (address);
           if (offset > 0 && offset < (gssize) n)
@@ -475,19 +435,6 @@ gum_mips_relocator_can_relocate (gpointer address,
           eoi = TRUE;
           break;
         }
-        case MIPS_INS_B:
-        {
-          cs_mips_op * op;
-          gssize target, offset;
-          op =  &d->operands[d->op_count - 1];
-
-          g_assert_cmpint (op->type, ==, MIPS_OP_IMM);
-          target = (gssize) op->imm;
-          offset = target - (gssize) GPOINTER_TO_SIZE (address);
-          if (offset > 0 && offset < (gssize) n)
-            n = offset;
-          break;
-        }  
         case MIPS_INS_BEQ:
         case MIPS_INS_BEQL:
         case MIPS_INS_BGEZ:
@@ -508,7 +455,7 @@ gum_mips_relocator_can_relocate (gpointer address,
 
           g_assert_cmpint (op->type, ==, MIPS_OP_IMM);
           target = (gssize) insn->address +
-              (op->imm & 0x8000 ? (0xffffffffffff0000 + op->imm) << 2 : op->imm << 2);
+              (op->imm & 0x8000 ? (0xffff0000 + op->imm) << 2 : op->imm << 2);
           offset =
               target - (gssize) GPOINTER_TO_SIZE (address);
           if (offset > 0 && offset < (gssize) n)
@@ -608,7 +555,6 @@ gum_mips_has_delay_slot (const cs_insn * insn)
     case MIPS_INS_BLTZALL:
     case MIPS_INS_JAL:
     case MIPS_INS_JALR:
-    case MIPS_INS_B:
     case MIPS_INS_BEQ:
     case MIPS_INS_BEQL:
     case MIPS_INS_BGEZ:

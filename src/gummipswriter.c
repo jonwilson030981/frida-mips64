@@ -367,7 +367,7 @@ gum_mips_writer_put_argument_list_setup (GumMipsWriter * self,
     const GumArgument * arg = &args[arg_index];
     mips_reg r = MIPS_REG_A0 + arg_index;
 
-    if (arg_index < 8)
+    if (arg_index < 4)
     {
       if (arg->type == GUM_ARG_ADDRESS)
       {
@@ -425,10 +425,10 @@ static void
 gum_mips_writer_put_argument_list_teardown (GumMipsWriter * self,
                                             guint n_args)
 {
-  if (n_args > 8)
+  if (n_args > 4)
   {
     gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP,
-        (n_args - 8) * sizeof (guint64));
+        (n_args - 4) * sizeof (guint32));
   }
 }
 
@@ -436,8 +436,8 @@ gboolean
 gum_mips_writer_can_branch_directly_between (GumAddress from,
                                              GumAddress to)
 {
-  gint64 lower_limit = (from & 0xfffffffff0000000);
-  gint64 upper_limit = (from & 0xfffffffff0000000) + GUM_INT28_MASK;
+  gint64 lower_limit = (from & 0xf0000000);
+  gint64 upper_limit = (from & 0xf0000000) + GUM_INT28_MASK;
 
   return lower_limit < to && to < upper_limit;
 }
@@ -446,7 +446,7 @@ gboolean
 gum_mips_writer_put_j_address (GumMipsWriter * self,
                                GumAddress address)
 {
-  if ((address & 0xfffffffff0000000) != (self->pc & 0xfffffffff0000000) || address % 4 != 0)
+  if ((address & 0xf0000000) != (self->pc & 0xf0000000) || address % 4 != 0)
     return FALSE;
 
   gum_mips_writer_put_instruction (self,
@@ -532,87 +532,12 @@ gum_mips_writer_put_ret (GumMipsWriter * self)
 }
 
 void
-gum_mips_write_put_ld_reg( GumMipsWriter * self,
-                              mips_reg base_reg,
-                              mips_reg dest_reg,
-                              gushort offset)
-{
-    GumMipsRegInfo base;
-    gum_mips_writer_describe_reg (self, base_reg, &base);
-
-    GumMipsRegInfo rt;
-    gum_mips_writer_describe_reg (self, dest_reg, &rt);
-
-    gum_mips_writer_put_instruction (self, 0x68000000 | (base.index << 21) |
-      (rt.index << 16) | offset);
-}
-
-void
-gum_mips_writer_put_j_address2 (GumMipsWriter * self,
-                               GumAddress address)
-{
-  g_assert((address & 0xf0000000) == (self->pc & 0xf0000000));
-  g_assert(address % 4 == 0);
-
-  gum_mips_writer_put_instruction (self,
-      0x08000000 | ((address & GUM_INT28_MASK) / 4));
-}
-
-void
-gum_mips_writer_put_dsll_reg_reg (GumMipsWriter * self,
-                                mips_reg rt_reg,
-                                mips_reg rd_reg,
-                                guint sa)
-{
-    GumMipsRegInfo rt;
-    gum_mips_writer_describe_reg (self, rt_reg, &rt);
-
-    GumMipsRegInfo rd;
-    gum_mips_writer_describe_reg (self, rd_reg, &rd);
-
-    g_assert(sa & 0x1f == sa);
-
-    gum_mips_writer_put_instruction (self, (rt.index << 16) | (rd.index << 11) | (sa << 6) | 0x38);
-}
-
-void
 gum_mips_writer_put_la_reg_address (GumMipsWriter * self,
                                     mips_reg reg,
                                     GumAddress address)
 {
-  //g_print("gum_mips_writer_put_la_reg_address - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
-  gum_mips_writer_put_lui_reg_imm(self, reg, (address >> 48));
-  gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, (address >> 32) & 0xffff);
-  gum_mips_writer_put_dsll_reg_reg(self, reg, reg, 16);
-  gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, (address >> 16) & 0xffff);
-  gum_mips_writer_put_dsll_reg_reg(self, reg, reg, 16);
-  gum_mips_writer_put_ori_reg_reg_imm(self, reg, reg, address & 0xffff);
-}
-
-void
-gum_mips_writer_put_prologue_trampoline (GumMipsWriter * self,
-                                         mips_reg reg,
-                                         GumAddress address)
-{
-  //g_print("gum_mips_writer_put_prologue_trampoline - pc: 0x%016lx, addr: 0x%016lx\n", self->pc, address);
-  if(self->pc % 8 == 0)
-  {
-    gum_mips_writer_put_j_address2(self, self->pc + 0x10);
-    gum_mips_write_put_ld_reg(self, MIPS_REG_T9, reg, 0x8);
-    g_assert(self->pc % 8 == 0);
-    gum_mips_writer_put_instruction(self, address >> 32);
-    gum_mips_writer_put_instruction(self, address & 0xffffffff);
-  }
-  else
-  {
-    gum_mips_writer_put_j_address2(self, self->pc + 0x14);
-    gum_mips_write_put_ld_reg(self, MIPS_REG_T9, reg, 0xc);
-    gum_mips_writer_put_instruction(self, 0x20);
-    g_assert(self->pc % 8 == 0);
-    gum_mips_writer_put_instruction(self, address >> 32);
-    gum_mips_writer_put_instruction(self, address & 0xffffffff);
-  }
-  gum_mips_writer_put_jr_reg (self, reg);
+  gum_mips_writer_put_lui_reg_imm (self, reg, address >> 16);
+  gum_mips_writer_put_ori_reg_reg_imm (self, reg, reg, address & 0xffff);
 }
 
 void
@@ -643,20 +568,6 @@ gum_mips_writer_put_ori_reg_reg_imm (GumMipsWriter * self,
       (rs.index << 21) | (imm & 0xffff));
 }
 
-void gum_mips_writer_put_dsll_reg_reg_imm (GumMipsWriter * self,
-                                          mips_reg dst_reg,
-                                          mips_reg src_reg,
-                                          guint imm)
-{
-  GumMipsRegInfo rt, rs;
-
-  gum_mips_writer_describe_reg (self, dst_reg, &rt);
-  gum_mips_writer_describe_reg (self, src_reg, &rs);
-
-  gum_mips_writer_put_instruction (self, 0x38 | (rt.index << 16) |
-      (rs.index << 11) | ((imm & 0x1f) << 6));
-}
-
 void
 gum_mips_writer_put_lw_reg_reg_offset (GumMipsWriter * self,
                                        mips_reg dst_reg,
@@ -668,11 +579,7 @@ gum_mips_writer_put_lw_reg_reg_offset (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, dst_reg, &rt);
   gum_mips_writer_describe_reg (self, base_reg, &rb);
 
-
-  /*
-   * Perform a 64-bit store
-   */
-  gum_mips_writer_put_instruction (self, 0xdc000000 | (rb.index << 21) |
+  gum_mips_writer_put_instruction (self, 0x8c000000 | (rb.index << 21) |
       (rt.index << 16) | (src_offset & 0xffff));
 }
 
@@ -687,10 +594,7 @@ gum_mips_writer_put_sw_reg_reg_offset (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, src_reg, &rt);
   gum_mips_writer_describe_reg (self, base_reg, &rb);
 
-  /*
-   * Perform a 64-bit store
-   */
-  gum_mips_writer_put_instruction (self, 0xfc000000 | (rb.index << 21) |
+  gum_mips_writer_put_instruction (self, 0xac000000 | (rb.index << 21) |
       (rt.index << 16) | (dest_offset & 0xffff));
 }
 
@@ -714,10 +618,7 @@ gum_mips_writer_put_addu_reg_reg_reg (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, left_reg, &rs);
   gum_mips_writer_describe_reg (self, right_reg, &rt);
 
-  /*
-   * Perform a 64-bit move
-   */
-  gum_mips_writer_put_instruction (self, 0x000000A5 | (rs.index << 21) |
+  gum_mips_writer_put_instruction (self, 0x00000021 | (rs.index << 21) |
       (rt.index << 16) | (rd.index << 11));
 }
 
@@ -732,11 +633,7 @@ gum_mips_writer_put_addi_reg_reg_imm (GumMipsWriter * self,
   gum_mips_writer_describe_reg (self, dst_reg, &rt);
   gum_mips_writer_describe_reg (self, left_reg, &rs);
 
-  g_assert(imm & 0xffff = imm);
-  /*
-   * For MIPS64 we want to carry out a 64bit doubleword operation.
-   */
-  gum_mips_writer_put_instruction (self, 0x64000000 | (rs.index << 21) |
+  gum_mips_writer_put_instruction (self, 0x20000000 | (rs.index << 21) |
       (rt.index << 16) | (imm & 0xffff));
 }
 
@@ -762,7 +659,7 @@ gum_mips_writer_put_push_reg (GumMipsWriter * self,
                               mips_reg reg)
 {
   gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP,
-      -((guint64) sizeof (guint64)));
+      -((gint32) sizeof (guint32)));
   gum_mips_writer_put_sw_reg_reg_offset (self, reg, MIPS_REG_SP, 0);
 }
 
@@ -771,7 +668,7 @@ gum_mips_writer_put_pop_reg (GumMipsWriter * self,
                              mips_reg reg)
 {
   gum_mips_writer_put_lw_reg_reg_offset (self, reg, MIPS_REG_SP, 0);
-  gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP, sizeof (guint64));
+  gum_mips_writer_put_addi_reg_imm (self, MIPS_REG_SP, sizeof (guint32));
 }
 
 void
@@ -861,19 +758,19 @@ gum_mips_writer_describe_reg (GumMipsWriter * self,
   if (reg >= MIPS_REG_0 && reg <= MIPS_REG_31)
   {
     ri->meta = GUM_MREG_R0 + (reg - MIPS_REG_0);
-    ri->width = 64;
+    ri->width = 32;
     ri->index = ri->meta - GUM_MREG_R0;
   }
   else if (reg == MIPS_REG_HI)
   {
     ri->meta = GUM_MREG_HI;
-    ri->width = 64;
+    ri->width = 32;
     ri->index = -1;
   }
   else if (reg == MIPS_REG_LO)
   {
     ri->meta = GUM_MREG_LO;
-    ri->width = 64;
+    ri->width = 32;
     ri->index = -1;
   }
   else

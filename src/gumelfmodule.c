@@ -848,7 +848,11 @@ static GumElfDynamicAddressState
 gum_elf_module_detect_dynamic_address_state (GumElfModule * self)
 {
   /* FIXME: this is not very generic */
+#ifdef HAVE_ANDROID
   return GUM_ELF_DYNAMIC_ADDRESS_PRISTINE;
+#else
+  return GUM_ELF_DYNAMIC_ADDRESS_ADJUSTED;
+#endif
 }
 
 static GumAddress

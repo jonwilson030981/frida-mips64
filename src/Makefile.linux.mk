@@ -77,15 +77,14 @@ build/$1-%/lib/pkgconfig/capstone.pc: build/$1-env-%.rc build/.capstone-submodul
 		&& export PACKAGE_TARNAME=capstone \
 		&& . $$$$CONFIG_SITE \
 		&& case $$* in \
-			*-x86)    capstone_archs="x86"         ;; \
-			*-x86_64) capstone_archs="x86"         ;; \
-			*-arm)    capstone_archs="arm"         ;; \
-			*-armhf)  capstone_archs="arm"         ;; \
-			*-armeabi)capstone_archs="arm"         ;; \
-			*-arm64)  capstone_archs="aarch64"     ;; \
-			*-mips)   capstone_archs="mips"        ;; \
-			*-mips64) capstone_archs="mips64"      ;; \
-			*-mipsel) capstone_archs="mips"        ;; \
+			*-x86)    capstone_archs="x86"     ;; \
+			*-x86_64) capstone_archs="x86"     ;; \
+			*-arm)    capstone_archs="arm"     ;; \
+			*-armhf)  capstone_archs="arm"     ;; \
+			*-armeabi)capstone_archs="arm"     ;; \
+			*-arm64)  capstone_archs="aarch64" ;; \
+			*-mips)   capstone_archs="mips"    ;; \
+			*-mipsel) capstone_archs="mips"    ;; \
 		esac \
 		&& CFLAGS="$$$$CPPFLAGS $$$$CFLAGS" make -C capstone \
 			PREFIX=$$$$frida_prefix \
@@ -154,7 +153,6 @@ core-android: build/frida-android-arm/lib/pkgconfig/frida-core-1.0.pc build/frid
 core-qnx-arm: build/frida-qnx-arm/lib/pkgconfig/frida-core-1.0.pc ##@core Build for QNX-arm
 core-qnx-armeabi: build/frida-qnx-armeabi/lib/pkgconfig/frida-core-1.0.pc ##@core Build for QNX-armeabi
 core-linux-mips: build/frida-linux-mips/lib/pkgconfig/frida-core-1.0.pc ##@core Build for mips
-core-linux-mips64: build/frida-linux-mips64/lib/pkgconfig/frida-core-1.0.pc ##@core Build for mips64
 core-linux-mipsel: build/frida-linux-mipsel/lib/pkgconfig/frida-core-1.0.pc ##@core Build for mipsel
 
 build/tmp-linux-x86/frida-core/.frida-ninja-stamp: build/.frida-core-submodule-stamp build/frida-linux-x86/lib/pkgconfig/frida-gum-1.0.pc
@@ -236,19 +234,6 @@ build/tmp-linux-mips/frida-core/.frida-ninja-stamp: build/.frida-core-submodule-
 			--prefix $(FRIDA)/build/frida-linux-mips \
 			--libdir $(FRIDA)/build/frida-linux-mips/lib \
 			--cross-file build/frida-linux-mips.txt \
-			$(frida_core_flags) \
-			frida-core $$builddir || exit 1; \
-	fi
-	@touch $@
-build/tmp-linux-mips64/frida-core/.frida-ninja-stamp: build/.frida-core-submodule-stamp build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
-	. build/frida-meson-env-linux-$(build_arch).rc; \
-	builddir=$(@D); \
-	if [ ! -f $$builddir/build.ninja ]; then \
-		mkdir -p $$builddir; \
-		$(MESON) \
-			--prefix $(FRIDA)/build/frida-linux-mips64 \
-			--libdir $(FRIDA)/build/frida-linux-mips64/lib \
-			--cross-file build/frida-linux-mips64.txt \
 			$(frida_core_flags) \
 			frida-core $$builddir || exit 1; \
 	fi
@@ -373,9 +358,6 @@ build/frida-linux-armhf/lib/pkgconfig/frida-core-1.0.pc: build/tmp-linux-armhf/f
 build/frida-linux-mips/lib/pkgconfig/frida-core-1.0.pc: build/tmp-linux-mips/frida-core/.frida-helper-and-agent-stamp
 	. build/frida-meson-env-linux-$(build_arch).rc && $(NINJA) -C build/tmp-linux-mips/frida-core install
 	@touch $@
-build/frida-linux-mips64/lib/pkgconfig/frida-core-1.0.pc: build/tmp-linux-mips64/frida-core/.frida-helper-and-agent-stamp
-	. build/frida-meson-env-linux-$(build_arch).rc && $(NINJA) -C build/tmp-linux-mips64/frida-core install
-	@touch $@
 build/frida-linux-mipsel/lib/pkgconfig/frida-core-1.0.pc: build/tmp-linux-mipsel/frida-core/.frida-helper-and-agent-stamp
 	. build/frida-meson-env-linux-$(build_arch).rc && $(NINJA) -C build/tmp-linux-mipsel/frida-core install
 	@touch $@
@@ -418,7 +400,6 @@ server-64-thin: build/frida_thin-linux-x86_64/lib/pkgconfig/frida-core-1.0.pc ##
 server-arm: build/frida-linux-arm/lib/pkgconfig/frida-core-1.0.pc ##@server Build for arm
 server-armhf: build/frida-linux-armhf/lib/pkgconfig/frida-core-1.0.pc ##@server Build for arm
 server-mips: build/frida-linux-mips/lib/pkgconfig/frida-core-1.0.pc ##@server Build for mips
-server-mips64: build/frida-linux-mips64/lib/pkgconfig/frida-core-1.0.pc ##@server Build for mips64
 server-mipsel: build/frida-linux-mipsel/lib/pkgconfig/frida-core-1.0.pc ##@server Build for mipsel
 server-android: build/frida-android-x86/lib/pkgconfig/frida-core-1.0.pc build/frida-android-x86_64/lib/pkgconfig/frida-core-1.0.pc build/frida-android-arm/lib/pkgconfig/frida-core-1.0.pc build/frida-android-arm64/lib/pkgconfig/frida-core-1.0.pc ##@server Build for Android
 server-qnx-arm: build/frida-qnx-arm/lib/pkgconfig/frida-core-1.0.pc ##@server Build for QNX-arm
@@ -434,7 +415,6 @@ gadget-64: build/frida-linux-x86_64/lib/pkgconfig/frida-core-1.0.pc ##@gadget Bu
 gadget-android: build/frida-android-x86/lib/pkgconfig/frida-core-1.0.pc build/frida-android-x86_64/lib/pkgconfig/frida-core-1.0.pc build/frida-android-arm/lib/pkgconfig/frida-core-1.0.pc build/frida-android-arm64/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for Android
 gadget-arm: build/frida-linux-arm/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for linux-arm
 gadget-armhf: build/frida-linux-armhf/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for linux-armhf
-gadget-mips64: build/frida-linux-mips64/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for mips64
 gadget-mipsel: build/frida-linux-mipsel/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for mipsel
 gadget-qnx-arm: build/frida-qnx-arm/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for qnx-arm
 gadget-qnx-armeabi: build/frida-qnx-armeabi/lib/pkgconfig/frida-core-1.0.pc ##@gadget Build for qnx-armeabi

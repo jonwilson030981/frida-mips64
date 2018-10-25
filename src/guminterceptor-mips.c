@@ -91,19 +91,15 @@ gum_interceptor_backend_prepare_trampoline (GumInterceptorBackend * self,
 
   *need_deflector = FALSE;
 
-  if (gum_mips_relocator_can_relocate (function_address, 28,
+  if (gum_mips_relocator_can_relocate (function_address, 16,
       GUM_SCENARIO_ONLINE, &redirect_limit, &data->scratch_reg))
   {
-    //g_print("can reloc redirect_limit: %d\n", redirect_limit);
-
-    data->redirect_code_size = 28;
+    data->redirect_code_size = 16;
 
     ctx->trampoline_slice = gum_code_allocator_alloc_slice (self->allocator);
-    //g_print("trampoline_slice: %p\n", ctx->trampoline_slice);
   }
   else
   {
-    //g_print("can't reloc redirect_limit: %d\n", redirect_limit);
     GumAddressSpec spec;
     gsize alignment;
 
@@ -150,7 +146,6 @@ _gum_interceptor_backend_create_trampoline (GumInterceptorBackend * self,
   if (!gum_interceptor_backend_prepare_trampoline (self, ctx, &need_deflector))
     return FALSE;
 
-  //g_print("making trampoline\n");
   gum_mips_writer_reset (cw, ctx->trampoline_slice->data);
 
   ctx->on_enter_trampoline = gum_mips_writer_cur (cw);
@@ -162,7 +157,7 @@ _gum_interceptor_backend_create_trampoline (GumInterceptorBackend * self,
   }
 
   /* TODO: save $t0 on the stack? */
-  gum_mips_writer_put_la_reg_address (cw, MIPS_REG_T4, GUM_ADDRESS (ctx));
+  gum_mips_writer_put_la_reg_address (cw, MIPS_REG_T0, GUM_ADDRESS (ctx));
   gum_mips_writer_put_la_reg_address (cw, MIPS_REG_AT,
       GUM_ADDRESS (self->enter_thunk->data));
   gum_mips_writer_put_jr_reg (cw, MIPS_REG_AT);
@@ -170,7 +165,7 @@ _gum_interceptor_backend_create_trampoline (GumInterceptorBackend * self,
   ctx->on_leave_trampoline = gum_mips_writer_cur (cw);
 
   /* TODO: save $t0 on the stack? */
-  gum_mips_writer_put_la_reg_address (cw, MIPS_REG_T4, GUM_ADDRESS (ctx));
+  gum_mips_writer_put_la_reg_address (cw, MIPS_REG_T0, GUM_ADDRESS (ctx));
   gum_mips_writer_put_la_reg_address (cw, MIPS_REG_AT,
       GUM_ADDRESS (self->leave_thunk->data));
   gum_mips_writer_put_jr_reg (cw, MIPS_REG_AT);
@@ -180,10 +175,6 @@ _gum_interceptor_backend_create_trampoline (GumInterceptorBackend * self,
       <=, ctx->trampoline_slice->size);
 
   ctx->on_invoke_trampoline = gum_mips_writer_cur (cw);
-
-  //g_print("trampoline - ctx->on_enter_trampoline: %p\n", ctx->on_enter_trampoline);
-  //g_print("trampoline - ctx->on_leave_trampoline: %p\n", ctx->on_leave_trampoline);
-  //g_print("trampoline - ctx->on_invoke_trampoline: %p\n", ctx->on_invoke_trampoline);
 
   /* Fix t9 to point to the original function address */
   gum_mips_writer_put_la_reg_address (cw, MIPS_REG_T9,
@@ -229,18 +220,11 @@ _gum_interceptor_backend_destroy_trampoline (GumInterceptorBackend * self,
   ctx->trampoline_deflector = NULL;
 }
 
-extern
-void
-gum_mips_writer_put_prologue_trampoline (GumMipsWriter * self,
-                                         mips_reg reg,
-                                         GumAddress address);
-
 void
 _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
                                               GumFunctionContext * ctx,
                                               gpointer prologue)
 {
-  //g_print("_gum_interceptor_backend_activate_trampoline\n");
   GumMipsWriter * cw = &self->writer;
   GumMipsFunctionContextData * data = (GumMipsFunctionContextData *)
       &ctx->backend_data;
@@ -261,8 +245,9 @@ _gum_interceptor_backend_activate_trampoline (GumInterceptorBackend * self,
       case 8:
         gum_mips_writer_put_j_address (cw, on_enter);
         break;
-      case 28:
-        gum_mips_writer_put_prologue_trampoline (cw, MIPS_REG_AT, on_enter);
+      case 16:
+        gum_mips_writer_put_la_reg_address (cw, MIPS_REG_AT, on_enter);
+        gum_mips_writer_put_jr_reg (cw, MIPS_REG_AT);
         break;
       default:
         g_assert_not_reached ();
@@ -301,16 +286,12 @@ gum_interceptor_backend_create_thunks (GumInterceptorBackend * self)
   GumMipsWriter * cw = &self->writer;
 
   self->enter_thunk = gum_code_allocator_alloc_slice (self->allocator);
-  //g_print("enter_thunk: %p\n", self->enter_thunk);
-  //g_print("enter_thunk->data: %p\n", self->enter_thunk->data);
   gum_mips_writer_reset (cw, self->enter_thunk->data);
   gum_emit_enter_thunk (cw);
   gum_mips_writer_flush (cw);
   g_assert_cmpuint (gum_mips_writer_offset (cw), <=, self->enter_thunk->size);
 
   self->leave_thunk = gum_code_allocator_alloc_slice (self->allocator);
-  //g_print("leave_thunk: %p\n", self->leave_thunk);
-  //g_print("leave_thunk->data: %p\n", self->leave_thunk->data);
   gum_mips_writer_reset (cw, self->leave_thunk->data);
   gum_emit_leave_thunk (cw);
   gum_mips_writer_flush (cw);
@@ -339,10 +320,10 @@ gum_emit_enter_thunk (GumMipsWriter * cw)
 
   gum_mips_writer_put_call_address_with_arguments (cw,
       GUM_ADDRESS (_gum_function_context_begin_invocation), 4,
-      GUM_ARG_REGISTER, MIPS_REG_T4,
-      GUM_ARG_REGISTER, MIPS_REG_A1,  // CPU_CONTEXT
-      GUM_ARG_REGISTER, MIPS_REG_A2,  // RA
-      GUM_ARG_REGISTER, MIPS_REG_A3); // NEXT_HOP
+      GUM_ARG_REGISTER, MIPS_REG_T0,
+      GUM_ARG_REGISTER, MIPS_REG_A1,
+      GUM_ARG_REGISTER, MIPS_REG_A2,
+      GUM_ARG_REGISTER, MIPS_REG_A3);
 
   gum_emit_epilog (cw);
 }
@@ -359,9 +340,9 @@ gum_emit_leave_thunk (GumMipsWriter * cw)
 
   gum_mips_writer_put_call_address_with_arguments (cw,
       GUM_ADDRESS (_gum_function_context_end_invocation), 3,
-      GUM_ARG_REGISTER, MIPS_REG_T4,
-      GUM_ARG_REGISTER, MIPS_REG_A1,  // CPU CONTEXT
-      GUM_ARG_REGISTER, MIPS_REG_A2); // NEXT_HOP
+      GUM_ARG_REGISTER, MIPS_REG_T0,
+      GUM_ARG_REGISTER, MIPS_REG_A1,
+      GUM_ARG_REGISTER, MIPS_REG_A2);
 
   gum_emit_epilog (cw);
 }
@@ -422,7 +403,7 @@ gum_emit_prolog (GumMipsWriter * cw)
 
   /* SP */
   gum_mips_writer_put_addi_reg_reg_imm (cw, MIPS_REG_V0, MIPS_REG_SP,
-      8 + (30 * 8));
+      4 + (30 * 4));
   gum_mips_writer_put_push_reg (cw, MIPS_REG_V0);
 
   gum_mips_writer_put_push_reg (cw, MIPS_REG_GP);

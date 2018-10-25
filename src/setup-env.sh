@@ -51,11 +51,6 @@ case $host_arch in
     meson_host_cpu=mips
     meson_host_endian=big
     ;;
-  mips64)
-    meson_host_cpu_family=mips
-    meson_host_cpu=mips
-    meson_host_endian=big
-    ;;
   mipsel)
     meson_host_cpu_family=mips
     meson_host_cpu=mips
@@ -149,7 +144,7 @@ fi
 prompt_color=33
 
 toolchain_version=20180825
-sdk_version=20180825
+sdk_version=20181023
 if [ $enable_asan = yes ]; then
   sdk_version="$sdk_version-asan"
 fi
@@ -224,12 +219,6 @@ case $host_platform in
 
         meson_host_cpu="mips1"
         ;;
-      mips64)
-        host_arch_flags="-march=mips64r2 -mabi=64"
-        host_toolprefix="mips64-unknown-linux-gnu-"
-
-        meson_host_cpu="mips64r2"
-        ;;
       mipsel)
         host_arch_flags="-march=mips1"
         host_toolprefix="mipsel-unknown-linux-uclibc-"
@@ -250,8 +239,8 @@ case $host_platform in
     OBJCOPY="${host_toolprefix}objcopy"
     OBJDUMP="${host_toolprefix}objdump"
 
-    CFLAGS="-I/home/build/zlib-1.2.11/ $host_arch_flags -ffunction-sections -fdata-sections"
-    LDFLAGS="-L/home/build/zlib-1.2.11/ $host_arch_flags -Wl,--gc-sections -Wl,-z,noexecstack"
+    CFLAGS="$host_arch_flags -ffunction-sections -fdata-sections"
+    LDFLAGS="$host_arch_flags -Wl,--gc-sections -Wl,-z,noexecstack"
 
     arch_args=$(flags_to_args "$host_arch_flags")
 
