@@ -17,3 +17,11 @@ Next we replace the source code of frida-gum with our modified files and rebuild
 We now populate our sysroot and add a utility script to run selected unit tests on the target.
 
 You can use 'make run' to start a shell in a built container, or 'make debug' to launch straight into gdb. It seems that gdb fails with an assertion failure on alternte attempts to control the target. I'm not sure why, but retrying works around it.
+
+# ctng-mips64
+This is the toolchain used to build my MIPS64 binaries derived from crosstool-ng
+https://github.com/jonwilson030981/ctng-mips64
+
+# target-mips64
+This is the target used for initial testing (prior to the actual embedded system), it is a MIPS64 linux environment running inside QEMU in a docker container.
+https://github.com/jonwilson030981/target-mips64
