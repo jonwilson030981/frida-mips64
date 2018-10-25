@@ -1,6 +1,6 @@
 # frida-mips64
 
-This repo is again based on ctng-mips64. It builds frida for the MIPS64 architecture. We first download and build zlib as frida didn't pick up the one installed on the system for me.
+This repo is again based on ctng-mips64. It builds frida-gum for the MIPS64 architecture. We first download and build zlib as frida didn't pick up the one installed on the system for me.
 
 Building frida on my computer takes a good while (I need to buy a new one) so the build is broken into several pieces, calling each target in the makefile in turn. In this way, should one of the steps fail, the docker file can be adjusted and the build carry on from the last successful step.
 
