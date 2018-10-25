@@ -17,7 +17,3 @@ Next we replace the source code of frida-gum with our modified files and rebuild
 We now populate our sysroot and add a utility script to run selected unit tests on the target.
 
 You can use 'make run' to start a shell in a built container, or 'make debug' to launch straight into gdb. It seems that gdb fails with an assertion failure on alternte attempts to control the target. I'm not sure why, but retrying works around it.
-
-Without JS
-Dynamically Linked
-Cannot make dirs on remote
