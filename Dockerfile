@@ -25,7 +25,6 @@ RUN apt-get install -y python python3 language-pack-en-base
 # CLONE FRIDA
 USER build
 WORKDIR /home/build/
-RUN echo test7
 RUN git clone https://github.com/jonwilson030981/frida.git
 WORKDIR /home/build/frida
 RUN git checkout features/mips64
