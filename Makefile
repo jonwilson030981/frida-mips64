@@ -3,39 +3,34 @@ PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
 PORT = 3000
-COMMANDS := " \
-	cp  /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests /mnt/; \
-	chown $(UID):$(GID) /mnt/gum-tests; \
-	cp /home/build/frida/test /mnt/test; \
-	chown $(UID):$(GID) /mnt/test; \
-	cp /home/build/frida/test /mnt/test-stripped; \
-	chown $(UID):$(GID) /mnt/test-stripped; \
-	cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so /mnt/targetfunctions-linux-mips64.so; \
-	chown $(UID):$(GID) /mnt/targetfunctions-linux-mips64.so; \
-	cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips64.so /mnt/specialfunctions-linux-mips64.so; \
-	chown $(UID):$(GID) /mnt/specialfunctions-linux-mips64.so; \
-	"
+ARCHS := mips mips64
 
-all:
-	docker build -t frida-mips64 .
-	mkdir -p bin
-	docker run --rm --name frida-mips64 -v $(PWD)/bin/:/mnt frida-mips64 /bin/bash -c $(COMMANDS)
+define build
+$(strip $1):
+	docker build \
+		--build-arg arch=$(strip $1) \
+		--build-arg build_arch=$(strip $1) \
+		--build-arg target=linux-gnu \
+		-t frida-$(strip $1) .
 
-run: all
-	docker run --rm -ti --name frida-mips64 --network=host frida-mips64 /bin/bash
+run-$(strip $1): $(strip $1)
+	docker run --rm -ti \
+		--name frida-$(strip $1) \
+		frida-$(strip $1) \
+		/bin/bash
 
-debug: all
-	docker run --rm -ti --name frida-mips64 --network=host frida-mips64 gdb-multiarch
+push-$(strip $1): $(strip $1)
+	docker tag frida-$(strip $1) jonwilson030981/frida-$(strip $1)
+	docker push jonwilson030981/frida-$(strip $1)
 
-push: all
-	docker image tag frida-mips64 repo.treescale.com/jonwilson/private/frida-mips64
-	docker push repo.treescale.com/jonwilson/private/frida-mips64
-	docker rmi repo.treescale.com/jonwilson/private/frida-mips64
+endef
+
+$(foreach a, $(ARCHS), $(eval $(call build, $a)))
 
 clean: rm rmi
 
 rmi:
-	docker image ls | grep none | cut -c 68-79 | xargs docker rmi --force
+	docker image ls | grep none | cut -c 41-52 | xargs -r docker rmi --force
 
 rm:
-	docker ps -a | grep -v CONTAINER | cut -d " " -f 1 | xargs docker rm --force
+	docker ps -a | grep -v CONTAINER | cut -d " " -f 1 | xargs -r docker rm --force

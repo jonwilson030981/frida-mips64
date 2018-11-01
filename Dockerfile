@@ -1,4 +1,5 @@
-FROM ctng-mips64
+ARG arch
+FROM ctng-$arch
 
 USER root
 RUN apt-get update
@@ -11,8 +12,11 @@ WORKDIR /home/build
 RUN wget https://zlib.net/zlib-1.2.11.tar.gz
 RUN tar zxvf zlib-1.2.11.tar.gz
 WORKDIR /home/build/zlib-1.2.11/
-RUN CC="mips64-unknown-linux-gnu-gcc -march=mips64r2" ./configure
-RUN CC="mips64-unknown-linux-gnu-gcc -march=mips64r2" make
+ARG build_arch
+ARG target
+ARG vendor=unknown
+RUN CC="$build_arch-$vendor-$target-gcc" ./configure
+RUN CC="$build_arch-$vendor-$target-gcc" make
 
 # INSTALL FRIDA BUILD DEPENDENCIES
 USER root
@@ -21,136 +25,25 @@ RUN apt-get install -y python python3 language-pack-en-base
 # CLONE FRIDA
 USER build
 WORKDIR /home/build/
-RUN git clone https://github.com/frida/frida.git
+RUN echo test7
+RUN git clone https://github.com/jonwilson030981/frida.git
 WORKDIR /home/build/frida
-RUN git checkout -b 12.2.8
-
-# Patch the build scripts for mips64
-COPY src/config.site.in /home/build/frida/releng/
-COPY src/setup-env.sh /home/build/frida/releng/
-COPY src/Makefile.sdk.mk /home/build/frida/
+RUN git checkout features/mips64
+RUN git log -n1
+RUN git submodule init
+RUN git submodule update
+RUN git submodule update --remote frida-gum
 
 # Build the SDK
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/liblzma.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/sqlite3.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libunwind.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/libelf.a
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/libdwarf.a
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libffi.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/glib-2.0.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/glib-openssl-static.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/gee-0.8.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/json-glib-1.0.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libsoup-2.4.pc
-RUN make -f Makefile.sdk.mk FRIDA_HOST=linux-mips64 build/sdk-linux-mips64.tar.bz2
-
-# Install pre-requisites for gum
-USER root
-RUN apt-get install -y nodejs-legacy npm
-RUN wget https://deb.nodesource.com/setup_8.x
-RUN chmod +x setup_8.x
-RUN ./setup_8.x
-RUN apt-get install -y nodejs
-USER build
-
-# Build frida-gum
-RUN make build/frida-env-linux-x86_64.rc
-COPY src/Makefile.linux.mk /home/build/frida
-RUN make FRIDA_HOST=linux-mips64 build/.frida-gum-submodule-stamp
-RUN make FRIDA_HOST=linux-mips64 NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stamp
-RUN make build/frida-linux-mips64/lib/pkgconfig/capstone.pc
-RUN make build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
-
-RUN cp releng/devkit-assets/frida-gum-example-unix.c test.c
-RUN sed -i "s/frida-gum.h/gum.h/g" test.c
-RUN mips64-unknown-linux-gnu-gcc -o test test.c \
-	-Wno-pointer-to-int-cast \
-	-I ./build/frida-linux-mips64/include/frida-1.0/gum/ \
-	-I ./build/frida-linux-mips64/include/frida-1.0/ \
-	-I ./build/fs-linux-mips64/include/glib-2.0 \
-	-I ./build/fs-linux-mips64/lib/glib-2.0/include/ \
-	-I ./build/frida-linux-mips64/include/ \
-	-ldl \
-	-l rt \
-	-l resolv \
-	-l m \
-	-lpthread \
-	./build/frida-linux-mips64/lib/libfrida-gum-1.0.a \
-	./build/sdk-linux-mips64/lib/libgobject-2.0.a \
-	./build/sdk-linux-mips64/lib/libelf.a \
-	./build/sdk-linux-mips64/lib/liblzma.a \
-	./build/sdk-linux-mips64/lib/libz.a  \
-	./build/sdk-linux-mips64/lib/libffi.a \
-	./build/frida-linux-mips64/lib/libcapstone.a \
-	./build/sdk-linux-mips64/lib/libgio-2.0.a \
-	./build/fs-linux-mips64/lib/libgmodule-2.0.a \
-	./build/sdk-linux-mips64/lib/gio/modules/libgioopenssl-static.a \
-	./build/sdk-linux-mips64/lib/libglib-2.0.a \
-	./build/sdk-linux-mips64/lib/libgobject-2.0.a
-
-USER root
-RUN apt-get install -y gdb vim cmake python3-pip gdb-multiarch
-RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
-RUN pip3 install --upgrade pip
-RUN pip3 install unicorn keystone-engine keystone-engine ropper
-RUN ln -s /usr/local/lib/python3.5/dist-packages/usr/lib/python3/dist-packages/keystone/libkeystone.so /usr/local/lib/python3.5/dist-packages/keystone/libkeystone.so
-ENV LC_CTYPE C.UTF-8
-
-USER root
-RUN apt-get install -y gdb vim cmake python3-pip gdb-multiarch
-RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
-RUN pip3 install --upgrade pip
-RUN pip3 install unicorn keystone-engine keystone-engine ropper
-
-ENV SYSROOT /home/build/x-tools/mips64-unknown-linux-gnu/mips64-unknown-linux-gnu/sysroot
-COPY src/.gdbinit /root/.gdbinit
-
-USER build
-# Patch for elf-module addresses
-COPY src/gumelfmodule.c /home/build/frida/frida-gum/gum/backend-elf/gumelfmodule.c
-COPY src/gummipsrelocator.c /home/build/frida/frida-gum/gum/arch-mips/gummipsrelocator.c
-COPY src/gummipswriter.c /home/build/frida/frida-gum/gum/arch-mips/gummipswriter.c
-COPY src/guminterceptor-mips.c /home/build/frida/frida-gum/gum/backend-mips/guminterceptor-mips.c
-COPY src/gumcpucontext-mips.c /home/build/frida/frida-gum/gum/backend-mips/gumcpucontext-mips.c
-COPY src/interceptor-fixture.c /home/build/frida/frida-gum/tests/core/interceptor-fixture.c
-COPY src/gumdefs.h /home/build/frida/frida-gum/gum/gumdefs.h
-
-RUN make -B build/frida-linux-mips64/lib/pkgconfig/frida-gum-1.0.pc
-RUN . ./build/fs-meson-env-linux-mips64.rc && cd ./frida-gum/tests/core/ && ./build-targetfunctions.sh linux mips64
-
-COPY src/test.c /home/build/frida/
-RUN mips64-unknown-linux-gnu-gcc -o test test.c \
-	-Wno-pointer-to-int-cast \
-	-I ./build/frida-linux-mips64/include/frida-1.0/gum/ \
-	-I ./build/frida-linux-mips64/include/frida-1.0/ \
-	-I ./build/fs-linux-mips64/include/glib-2.0 \
-	-I ./build/fs-linux-mips64/lib/glib-2.0/include/ \
-	-I ./build/frida-linux-mips64/include/ \
-	-ldl \
-	-l rt \
-	-l resolv \
-	-l m \
-	-lpthread \
-	./build/frida-linux-mips64/lib/libfrida-gum-1.0.a \
-	./build/sdk-linux-mips64/lib/libgobject-2.0.a \
-	./build/sdk-linux-mips64/lib/libelf.a \
-	./build/sdk-linux-mips64/lib/liblzma.a \
-	./build/sdk-linux-mips64/lib/libz.a  \
-	./build/sdk-linux-mips64/lib/libffi.a \
-	./build/frida-linux-mips64/lib/libcapstone.a \
-	./build/sdk-linux-mips64/lib/libgio-2.0.a \
-	./build/fs-linux-mips64/lib/libgmodule-2.0.a \
-	./build/sdk-linux-mips64/lib/gio/modules/libgioopenssl-static.a \
-	./build/sdk-linux-mips64/lib/libglib-2.0.a \
-	./build/sdk-linux-mips64/lib/libgobject-2.0.a
-
-USER root
-RUN mkdir -p $SYSROOT/root/
-RUN cp /home/build/frida/build/tmp-linux-mips64/frida-gum/tests/gum-tests $SYSROOT/root/
-RUN cp /home/build/frida/test $SYSROOT/root/
-RUN cp /home/build/frida/frida-gum/tests/data/targetfunctions-linux-mips64.so $SYSROOT/root/
-RUN cp /home/build/frida/frida-gum/tests/data/specialfunctions-linux-mips64.so $SYSROOT/root/
-COPY src/run.sh $SYSROOT/root/run.sh
-
-RUN cp $SYSROOT/root/test $SYSROOT/root/test-stripped
-RUN mips64-unknown-linux-gnu-strip $SYSROOT/root/test-stripped
+RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/liblzma.pc
+RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/sqlite3.pc
+RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/libunwind.pc
+RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/libelf.a
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/libdwarf.a
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/libffi.pc
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/glib-2.0.pc
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/glib-openssl-static.pc
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/gee-0.8.pc
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/json-glib-1.0.pc
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/libsoup-2.4.pc
+#RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_CFLAGS=-I/home/build/zlib-1.2.11/ FRIDA_LDFLAGS=-I/home/build/zlib-1.2.11/FRIDA_HOST=linux-$build_arch build/sdk-linux-$build_arch.tar.bz2
