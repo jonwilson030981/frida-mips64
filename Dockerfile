@@ -1,5 +1,5 @@
 ARG arch
-FROM ctng-$arch
+FROM ctng-$arch as build
 
 USER root
 RUN apt-get update
@@ -37,3 +37,14 @@ RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 # Build frida-gum
 RUN make build/frida-linux-$build_arch/lib/pkgconfig/frida-gum-1.0.pc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 RUN . ./build/fs-meson-env-linux-$build_arch.rc && cd ./frida-gum/tests/core/ && ./build-targetfunctions.sh linux $build_arch
+
+FROM target-$arch as run
+USER build
+WORKDIR /home/build/
+RUN mkdir -p frida/data/
+WORKDIR /home/build/frida
+ARG build_arch
+COPY --from=build /home/build/frida/build/tmp-linux-$build_arch/frida-gum/tests/gum-tests .
+COPY --from=build /home/build/frida/build/tmp-linux-$build_arch/frida-gum/tests/data/specialfunctions-linux-$build_arch.so ./data/
+COPY --from=build /home/build/frida/build/tmp-linux-$build_arch/frida-gum/tests/data/targetfunctions-linux-$build_arch.so ./data/
+RUN e2cp -O0 -G0 -P755 . /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root
