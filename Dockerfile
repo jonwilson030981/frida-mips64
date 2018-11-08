@@ -5,7 +5,18 @@ USER root
 RUN apt-get update
 
 # INSTALL FRIDA BUILD DEPENDENCIES
-RUN apt-get install -y git python python3 language-pack-en-base
+RUN apt-get install -y \
+    git \
+    build-essential \
+    gcc-multilib \
+    libstdc++-5-dev \
+    python-dev \
+    python3-dev \
+    language-pack-en-base \
+    curl
+
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash
+RUN apt-get install -y nodejs
 
 # CLONE FRIDA
 USER build
@@ -22,21 +33,6 @@ ARG build_arch
 
 # Build the SDK
 RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
-RUN make -f Makefile.sdk.mk
-
-
-# Install pre-requisites for gum
-USER root
-RUN apt-get install -y nodejs-legacy npm
-RUN wget https://deb.nodesource.com/setup_8.x
-RUN chmod +x setup_8.x
-RUN ./setup_8.x
-RUN apt-get install -y nodejs
 
 # Build frida-gum
-USER build
-
-RUN make FRIDA_HOST=linux-$build_arch build/.frida-gum-submodule-stamp
-RUN make FRIDA_HOST=linux-$build_arch NODE_BIN_DIR=/usr/bin build/.frida-gum-npm-stamp
-#RUN make build/frida-linux-$build_arch/lib/pkgconfig/capstone.pc
-#RUN make build/frida-linux-$build_arch/lib/pkgconfig/frida-gum-1.0.pc
+RUN make build/frida-linux-$build_arch/lib/pkgconfig/frida-gum-1.0.pc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
