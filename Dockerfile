@@ -51,3 +51,5 @@ RUN e2mkdir -O0 -G0 -P755 /home/build/buildroot-2016.02/output/images/rootfs.ext
 RUN e2cp -O0 -G0 -P755 gum-tests /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root
 RUN e2cp -O0 -G0 -P755 data/specialfunctions-linux-$build_arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
 RUN e2cp -O0 -G0 -P755 data/targetfunctions-linux-$build_arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
+RUN echo "/root/gum-tests" >> S99gum-tests
+RUN e2cp -O0 -G0 -P755 S99gum-tests /home/build/buildroot-2016.02/output/images/rootfs.ext2:/etc/init.d
