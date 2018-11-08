@@ -47,4 +47,7 @@ ARG build_arch
 COPY --from=build /home/build/frida/build/tmp-linux-$build_arch/frida-gum/tests/gum-tests .
 COPY --from=build /home/build/frida/build/tmp-linux-$build_arch/frida-gum/tests/data/specialfunctions-linux-$build_arch.so ./data/
 COPY --from=build /home/build/frida/build/tmp-linux-$build_arch/frida-gum/tests/data/targetfunctions-linux-$build_arch.so ./data/
-RUN e2cp -O0 -G0 -P755 . /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root
+RUN e2mkdir -O0 -G0 -P755 /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
+RUN e2cp -O0 -G0 -P755 gum-tests /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root
+RUN e2cp -O0 -G0 -P755 data/specialfunctions-linux-$build_arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
+RUN e2cp -O0 -G0 -P755 data/targetfunctions-linux-$build_arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data

@@ -40,15 +40,15 @@ $(strip $1):
 run-$(strip $1): $(strip $1)
 ifeq ($(strip $(shell echo '$(strip $1)' | head -c6)),mips64)
 	docker run --rm -ti \
-		--name target-$(strip $1) \
+		--name frida-$(strip $1) \
 		-p $(PORT):$(PORT) \
-		target-$(strip $1) \
+		frida-$(strip $1) \
 		/bin/bash -c "$(QEMU64)"
 else
 	docker run --rm -ti \
-		--name target-$(strip $1) \
+		--name frida-$(strip $1) \
 		-p $(PORT):$(PORT) \
-		target-$(strip $1) \
+		frida-$(strip $1) \
 		/bin/bash -c "$(QEMU)"
 endif
 
