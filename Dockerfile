@@ -34,6 +34,14 @@ ARG build_arch
 # Build the SDK
 RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 
+#
+# TODO REMOVE THE NEXT BLOCK. WE DEPLOY THE SDKS SO WE CAN JUST CONTINUE 
+# THE BUILD FROM THE GIT UPDATE WITHOUT HAVING TO BUILD THEM EACH TIME WE MAKE A CHANGE
+#
+RUN make build/frida-env-linux-x86_64.rc
+RUN make build/frida-env-linux-$build_arch.rc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
+RUN git submodule update --remote frida-gum
+
 # Build frida-gum
 RUN make build/frida-linux-$build_arch/lib/pkgconfig/frida-gum-1.0.pc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 RUN . ./build/fs-meson-env-linux-$build_arch.rc && cd ./frida-gum/tests/core/ && ./build-targetfunctions.sh linux $build_arch
