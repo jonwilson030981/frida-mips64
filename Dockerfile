@@ -26,6 +26,8 @@ WORKDIR /home/build/frida
 RUN git checkout features/mips64
 RUN git log -n1
 RUN git submodule init
+RUN git config --global url.https://github.com/.insteadOf git://github.com/
+
 RUN git submodule update
 RUN git submodule update --remote frida-gum
 
