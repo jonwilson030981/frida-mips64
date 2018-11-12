@@ -16,6 +16,8 @@ QEMU := \
 	-serial stdio \
 	-monitor null \
 	-redir tcp:$(PORT)::$(PORT) \
+	-cpu P5600
+
 
 QEMU64 := \
 	stty intr ^]; \
