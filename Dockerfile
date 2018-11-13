@@ -42,7 +42,9 @@ RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 #
 RUN make build/frida-env-linux-x86_64.rc
 RUN make build/frida-env-linux-$build_arch.rc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
+RUN echo "test"
 RUN git submodule update --remote frida-gum
+RUN cd frida-gum && git log -n 1
 
 # Build frida-gum
 RUN make build/frida-linux-$build_arch/lib/pkgconfig/frida-gum-1.0.pc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
@@ -61,5 +63,9 @@ RUN e2mkdir -O0 -G0 -P755 /home/build/buildroot-2016.02/output/images/rootfs.ext
 RUN e2cp -O0 -G0 -P755 gum-tests /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root
 RUN e2cp -O0 -G0 -P755 data/specialfunctions-linux-$build_arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
 RUN e2cp -O0 -G0 -P755 data/targetfunctions-linux-$build_arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
-RUN echo "/root/gum-tests" >> S99gum-tests
+RUN echo "/root/gum-tests \
+	-s /GumJS/Script/invalid_read_write_execute_results_in_exception#DUK \
+	-s /GumJS/Script/script_can_be_compiled_to_bytecode#DUK \
+	-s /GumJS/Script/source_maps_should_be_supported_for_our_runtime#DUK \
+	" >> S99gum-tests
 RUN e2cp -O0 -G0 -P755 S99gum-tests /home/build/buildroot-2016.02/output/images/rootfs.ext2:/etc/init.d

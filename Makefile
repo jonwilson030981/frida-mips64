@@ -15,8 +15,7 @@ QEMU := \
 	-append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic' \
 	-serial stdio \
 	-monitor null \
-	-redir tcp:$(PORT)::$(PORT) \
-	-cpu P5600
+	-redir tcp:$(PORT)::$(PORT)
 
 
 QEMU64 := \
