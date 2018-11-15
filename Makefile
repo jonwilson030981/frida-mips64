@@ -59,6 +59,19 @@ shell-$(strip $1): $(strip $1)
 		frida-$(strip $1) \
 		/bin/bash
 
+build-$(strip $1):
+	docker build \
+		--build-arg arch=$(strip $1) \
+		--build-arg build_arch=$(strip $1) \
+		-t build-frida-$(strip $1) . \
+		--target build
+
+shell-build-$(strip $1): build-$(strip $1)
+	docker run --rm -ti \
+		--name build-frida-$(strip $1) \
+		build-frida-$(strip $1) \
+		/bin/bash
+
 push-$(strip $1): $(strip $1)
 	docker tag frida-$(strip $1) jonwilson030981/frida-$(strip $1)
 	docker push jonwilson030981/frida-$(strip $1)

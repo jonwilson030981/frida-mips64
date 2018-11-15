@@ -42,7 +42,9 @@ RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 #
 RUN make build/frida-env-linux-x86_64.rc
 RUN make build/frida-env-linux-$build_arch.rc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
+RUN git config --global url.https://github.com/jonwilson030981/libffi.git.insteadOf https://github.com/frida/libffi.git
 RUN echo "test"
+RUN make -B -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libffi.pc
 RUN git submodule update --remote frida-gum
 RUN cd frida-gum && git log -n 1
 
