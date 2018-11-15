@@ -44,9 +44,9 @@ RUN make build/frida-env-linux-x86_64.rc
 RUN make build/frida-env-linux-$build_arch.rc FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch
 RUN git config --global url.https://github.com/jonwilson030981/libffi.git.insteadOf https://github.com/frida/libffi.git
 RUN echo "test"
-RUN make -B -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-mips64 build/fs-linux-mips64/lib/pkgconfig/libffi.pc
-RUN cp /home/build/frida/build/fs-tmp-linux-mips64/libffi/src/libffi.a /home/build/frida/build/fs-tmp-linux-mips64/package/lib/libffi.a
-RUN cp /home/build/frida/build/fs-tmp-linux-mips64/libffi/src/libffi.a /home/build/frida/build/sdk-linux-mips64/lib/libffi.a
+RUN make -B -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$build_arch build/fs-linux-$build_arch/lib/pkgconfig/libffi.pc
+RUN cp /home/build/frida/build/fs-tmp-linux-$build_arch/libffi/src/libffi.a /home/build/frida/build/fs-tmp-linux-$build_arch/package/lib/libffi.a
+RUN cp /home/build/frida/build/fs-tmp-linux-$build_arch/libffi/src/libffi.a /home/build/frida/build/sdk-linux-$build_arch/lib/libffi.a
 RUN git submodule update --remote frida-gum
 RUN cd frida-gum && git log -n 1
 
