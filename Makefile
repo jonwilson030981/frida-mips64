@@ -31,54 +31,53 @@ QEMU64 := \
 	-redir tcp:$(PORT)::$(PORT) \
 	-cpu MIPS64R2-generic
 
-define build
-$(strip $1):
-	docker build \
-		--build-arg arch=$(strip $1) \
-		--build-arg build_arch=$(strip $1) \
-		-t frida-$(strip $1) .
-
-run-$(strip $1): $(strip $1)
-ifeq ($(strip $(shell echo '$(strip $1)' | head -c6)),mips64)
+# Run a docker image. 
+#   $1 is the image name, 
+#   $2 is the architecture
+define run 
+run-$(strip $1)-$(strip $2): $(strip $1)-$(strip $2)
 	docker run --rm -ti \
-		--name frida-$(strip $1) \
-		-p $(PORT):$(PORT) \
-		frida-$(strip $1) \
-		/bin/bash -c "$(QEMU64)"
-else
-	docker run --rm -ti \
-		--name frida-$(strip $1) \
-		-p $(PORT):$(PORT) \
-		frida-$(strip $1) \
-		/bin/bash -c "$(QEMU)"
-endif
-
-shell-$(strip $1): $(strip $1)
-	docker run --rm -ti \
-		--name frida-$(strip $1) \
-		frida-$(strip $1) \
+		--name $(strip $1)-$(strip $2) \
+		$(strip $1)-$(strip $2) \
 		/bin/bash
-
-build-$(strip $1):
-	docker build \
-		--build-arg arch=$(strip $1) \
-		--build-arg build_arch=$(strip $1) \
-		-t build-frida-$(strip $1) . \
-		--target build
-
-shell-build-$(strip $1): build-$(strip $1)
-	docker run --rm -ti \
-		--name build-frida-$(strip $1) \
-		build-frida-$(strip $1) \
-		/bin/bash
-
-push-$(strip $1): $(strip $1)
-	docker tag frida-$(strip $1) jonwilson030981/frida-$(strip $1)
-	docker push jonwilson030981/frida-$(strip $1)
-
 endef
 
-$(foreach a, $(ARCHS), $(eval $(call build, $a)))
+# Build a docker image: 
+#   $1 is the image name, 
+#   $2 is the architecture, 
+#   $3 is the dependent build stage (including architecture)
+define build
+$(strip $1)-$(strip $2): $(strip $3)
+	docker build \
+		--build-arg arch=$(strip $2) \
+		--target $(strip $1) \
+		-t $(strip $1)-$(strip $2) \
+		.
+endef
+
+# Push a docker image: 
+#   $1 is the image name, 
+#   $2 is the architecture, 
+define push
+push-$(strip $1)-$(strip $2): $(strip $1)-$(strip $2)
+	docker tag $(strip $1)-$(strip $2) jonwilson030981/$(strip $1)-$(strip $2)
+	docker push jonwilson030981/$(strip $1)-$(strip $2)
+endef
+
+# Build targets for a docker image: 
+#   $1 is the architecture 
+define docker
+$(eval $(call build, ctng, $(strip $1)))
+$(info $(call build, ctng, $(strip $1)))
+
+$(eval $(call run, ctng, $(strip $1)))
+$(info $(call run, ctng, $(strip $1)))
+
+$(eval $(call push, ctng, $(strip $1)))
+$(info $(call push, ctng, $(strip $1)))
+endef
+
+$(foreach a, $(ARCHS), $(eval $(call docker, $a)))
 
 clean: rm rmi
 
