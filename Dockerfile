@@ -37,10 +37,9 @@ RUN sed -i "s/\${make}/make/g" scripts/build/libc/glibc.sh
 
 # Disable HSTS because proxies
 RUN sed -i "s/wget --passive-ftp --tries=3 -nc/wget --no-hsts --passive-ftp --tries=1 -nc/g" scripts/functions
-    
+
 RUN ./ct-ng build
 
-ARG build_arch
 ARG target
 ARG vendor=unknown
 ENV PATH $PATH:/home/build/x-tools/$arch-$vendor-linux-gnu/bin/
@@ -65,7 +64,6 @@ RUN tar zxvf linux-4.7.tar.gz
 WORKDIR /home/build/linux-4.7
 
 ENV ARCH mips
-ARG build_arch
 ARG target
 ENV CROSS_COMPILE $arch-unknown-linux-gnu-
 RUN echo $CROSS_COMPILE
@@ -132,10 +130,10 @@ RUN git log -n1
 RUN git submodule init
 RUN git config --global url.https://github.com/.insteadOf git://github.com/
 
-RUN git submodule UPDATE
+RUN git submodule update
 RUN git submodule update --remote frida-gum
 
-ARG build_arch
+ARG arch
 
 # Build the SDK
 RUN make -f Makefile.sdk.mk FRIDA_LIBC=gnu FRIDA_HOST=linux-$arch
@@ -165,7 +163,7 @@ USER build
 WORKDIR /home/build/
 RUN mkdir -p frida/data/
 WORKDIR /home/build/frida
-ARG build_arch
+ARG arch
 COPY --from=frida-$arch /home/build/frida/build/tmp-linux-$arch/frida-gum/tests/gum-tests .
 COPY --from=frida-$arch /home/build/frida/frida-gum/tests/data/specialfunctions-linux-$arch.so ./data/
 COPY --from=frida-$arch /home/build/frida/frida-gum/tests/data/targetfunctions-linux-$arch.so ./data/

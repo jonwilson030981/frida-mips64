@@ -67,6 +67,9 @@ endef
 # Build targets for a docker image: 
 #   $1 is the architecture 
 define docker
+
+############################################################################
+
 $(eval $(call build, ctng, $(strip $1)))
 $(info $(call build, ctng, $(strip $1)))
 
@@ -108,6 +111,8 @@ $(info $(call run, test, $(strip $1)))
 
 $(eval $(call push, test, $(strip $1)))
 $(info $(call push, test, $(strip $1)))
+
+############################################################################
 
 endef
 
