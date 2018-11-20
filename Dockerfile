@@ -37,13 +37,13 @@ RUN sed -i "s/\${make}/make/g" scripts/build/libc/glibc.sh
 
 # Disable HSTS because proxies
 RUN sed -i "s/wget --passive-ftp --tries=3 -nc/wget --no-hsts --passive-ftp --tries=1 -nc/g" scripts/functions
-
+    
 RUN ./ct-ng build
 
 ARG build_arch
 ARG target
 ARG vendor=unknown
-ENV PATH $PATH:/home/build/x-tools/$build_arch-$vendor-$target/bin/
+ENV PATH $PATH:/home/build/x-tools/$arch-$vendor-linux-gnu/bin/
 
 USER root
 
@@ -67,7 +67,7 @@ WORKDIR /home/build/linux-4.7
 ENV ARCH mips
 ARG build_arch
 ARG target
-ENV CROSS_COMPILE $arch-unknown-$target-
+ENV CROSS_COMPILE $arch-unknown-linux-gnu-
 RUN echo $CROSS_COMPILE
 
 COPY src/$arch/linux.config /home/build/linux-4.7/.config
