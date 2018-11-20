@@ -75,6 +75,40 @@ $(info $(call run, ctng, $(strip $1)))
 
 $(eval $(call push, ctng, $(strip $1)))
 $(info $(call push, ctng, $(strip $1)))
+
+############################################################################
+
+$(eval $(call build, target, $(strip $1), ctng-$(strip $1)))
+$(info $(call build, target, $(strip $1), ctng-$(strip $1)))
+
+$(eval $(call run, target, $(strip $1)))
+$(info $(call run, target, $(strip $1)))
+
+$(eval $(call push, target, $(strip $1)))
+$(info $(call push, target, $(strip $1)))
+
+############################################################################
+
+$(eval $(call build, frida, $(strip $1), target-$(strip $1)))
+$(info $(call build, frida, $(strip $1), target-$(strip $1)))
+
+$(eval $(call run, frida, $(strip $1)))
+$(info $(call run, frida, $(strip $1)))
+
+$(eval $(call push, frida, $(strip $1)))
+$(info $(call push, frida, $(strip $1)))
+
+############################################################################
+
+$(eval $(call build, test, $(strip $1), target-$(strip $1) frida-$(strip $1)))
+$(info $(call build, test, $(strip $1), target-$(strip $1) frida-$(strip $1)))
+
+$(eval $(call run, test, $(strip $1)))
+$(info $(call run, test, $(strip $1)))
+
+$(eval $(call push, test, $(strip $1)))
+$(info $(call push, test, $(strip $1)))
+
 endef
 
 $(foreach a, $(ARCHS), $(eval $(call docker, $a)))
