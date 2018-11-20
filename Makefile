@@ -34,12 +34,13 @@ QEMU64 := \
 # Run a docker image. 
 #   $1 is the image name, 
 #   $2 is the architecture
+#   $3 is the command
 define run 
 run-$(strip $1)-$(strip $2): $(strip $1)-$(strip $2)
 	docker run --rm -ti \
 		--name $(strip $1)-$(strip $2) \
 		$(strip $1)-$(strip $2) \
-		/bin/bash
+		/bin/bash $(strip $3)
 endef
 
 # Build a docker image: 
@@ -71,50 +72,32 @@ define docker
 ############################################################################
 
 $(eval $(call build, ctng, $(strip $1)))
-$(info $(call build, ctng, $(strip $1)))
-
 $(eval $(call run, ctng, $(strip $1)))
-$(info $(call run, ctng, $(strip $1)))
-
 $(eval $(call push, ctng, $(strip $1)))
-$(info $(call push, ctng, $(strip $1)))
 
 ############################################################################
 
 $(eval $(call build, target, $(strip $1), ctng-$(strip $1)))
-$(info $(call build, target, $(strip $1), ctng-$(strip $1)))
-
 $(eval $(call run, target, $(strip $1)))
-$(info $(call run, target, $(strip $1)))
-
 $(eval $(call push, target, $(strip $1)))
-$(info $(call push, target, $(strip $1)))
 
 ############################################################################
 
 $(eval $(call build, frida, $(strip $1), target-$(strip $1)))
-$(info $(call build, frida, $(strip $1), target-$(strip $1)))
-
 $(eval $(call run, frida, $(strip $1)))
-$(info $(call run, frida, $(strip $1)))
-
 $(eval $(call push, frida, $(strip $1)))
-$(info $(call push, frida, $(strip $1)))
 
 ############################################################################
 
 $(eval $(call build, test, $(strip $1), target-$(strip $1) frida-$(strip $1)))
-$(info $(call build, test, $(strip $1), target-$(strip $1) frida-$(strip $1)))
-
-$(eval $(call run, test, $(strip $1)))
-$(info $(call run, test, $(strip $1)))
-
 $(eval $(call push, test, $(strip $1)))
-$(info $(call push, test, $(strip $1)))
 
 ############################################################################
 
 endef
+
+$(eval $(call run, test, mips, -c "$(QEMU)"))
+$(eval $(call run, test, mips64, -c "$(QEMU64)"))
 
 $(foreach a, $(ARCHS), $(eval $(call docker, $a)))
 

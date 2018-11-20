@@ -164,9 +164,9 @@ WORKDIR /home/build/
 RUN mkdir -p frida/data/
 WORKDIR /home/build/frida
 ARG arch
-COPY --from=frida-$arch /home/build/frida/build/tmp-linux-$arch/frida-gum/tests/gum-tests .
-COPY --from=frida-$arch /home/build/frida/frida-gum/tests/data/specialfunctions-linux-$arch.so ./data/
-COPY --from=frida-$arch /home/build/frida/frida-gum/tests/data/targetfunctions-linux-$arch.so ./data/
+COPY --from=frida /home/build/frida/build/tmp-linux-$arch/frida-gum/tests/gum-tests .
+COPY --from=frida /home/build/frida/frida-gum/tests/data/specialfunctions-linux-$arch.so ./data/
+COPY --from=frida /home/build/frida/frida-gum/tests/data/targetfunctions-linux-$arch.so ./data/
 RUN e2mkdir -O0 -G0 -P755 /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
 RUN e2cp -O0 -G0 -P755 gum-tests /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root
 RUN e2cp -O0 -G0 -P755 data/specialfunctions-linux-$arch.so /home/build/buildroot-2016.02/output/images/rootfs.ext2:/root/data
